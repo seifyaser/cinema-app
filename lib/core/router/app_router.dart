@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/home/presentation/screens/home_screen.dart';
 import '../shared/main_layout.dart';
 
 abstract class AppRouter {
@@ -17,7 +18,7 @@ abstract class AppRouter {
 
   static GoRouter router() {
     return GoRouter(
-      initialLocation: loginRoute,
+      initialLocation: homeRoute,
       routes: [
         // ================= AUTH =================
         GoRoute(
@@ -40,8 +41,7 @@ abstract class AppRouter {
               routes: [
                 GoRoute(
                   path: homeRoute,
-                  builder: (context, state) =>
-                      const Scaffold(body: Center(child: Text('Home Screen'))),
+                  builder: (context, state) => const HomeScreen(),
                 ),
               ],
             ),

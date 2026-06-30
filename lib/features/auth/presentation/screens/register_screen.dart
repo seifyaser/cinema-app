@@ -5,7 +5,7 @@ import '../../../../core/router/app_router.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../widgets/Auth_phone_field.dart';
+import '../widgets/auth_phone_field.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
