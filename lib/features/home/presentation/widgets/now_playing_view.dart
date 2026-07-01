@@ -39,7 +39,7 @@ class _NowPlayingViewState extends State<NowPlayingView> {
               today,
               style: TextStyle(
                 fontFamily: GoogleFonts.leagueSpartan().fontFamily,
-                fontSize: 45,
+                fontSize: 50,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 2,
                 color: Colors.white,
@@ -48,7 +48,7 @@ class _NowPlayingViewState extends State<NowPlayingView> {
           ),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 10),
 
         Expanded(
           child: CinemaDeck(

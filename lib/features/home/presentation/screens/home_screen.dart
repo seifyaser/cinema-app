@@ -29,10 +29,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     _selectedIndex = 1;
 
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
+    _tabController.animation!.addListener(() {
+      int newIndex = _tabController.animation!.value.round();
+      if (_selectedIndex != newIndex) {
         setState(() {
-          _selectedIndex = _tabController.index;
+          _selectedIndex = newIndex;
         });
       }
     });
@@ -44,16 +45,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _onTabChanged(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    _tabController.animateTo(index);
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final double screenHeight = MediaQuery.sizeOf(context).height;
+
+    // Calculate perfectly responsive dimensions to maintain SVG aspect ratio
+    final double tabWidth = screenWidth * 0.6;
+    // Making the top bar slightly taller by increasing the virtual height from 66 to 80
+    final double tabHeight = tabWidth * (80.0 / 336.0);
+
+    // Position the main container to overlap underneath the curve
+    final double overlap = 5.0; // Ensures no 1px anti-aliasing cracks
+    final double containerTopOffset = tabHeight - overlap;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -69,19 +74,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.only(top: 10.0),
+              padding: const EdgeInsets.only(top: 20.0),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
                   // Main Content Container (bottom layer in stack)
                   Positioned(
-                    top: 50.0, // Matches the height of the tab's bounding box
+                    top: containerTopOffset,
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeInOutCubic,
+                    child: Container(
                       decoration: BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.only(
@@ -106,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                  
+
                   // Top Tabs (top layer in stack) - draws *over* the container
                   Positioned(
                     top: 0,
@@ -114,8 +117,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     right: 0,
                     child: AnimatedTopTabs(
                       tabs: _tabs,
-                      selectedIndex: _selectedIndex,
-                      onChanged: _onTabChanged,
+                      controller: _tabController,
+                      tabWidth: tabWidth,
+                      tabHeight: tabHeight,
                     ),
                   ),
                 ],

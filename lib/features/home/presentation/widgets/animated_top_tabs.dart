@@ -1,148 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AnimatedTopTabs extends StatefulWidget {
+class AnimatedTopTabs extends StatelessWidget {
   final List<String> tabs;
-  final int selectedIndex;
-  final ValueChanged<int> onChanged;
+  final TabController controller;
+  final double tabWidth;
+  final double tabHeight;
 
   const AnimatedTopTabs({
     super.key,
     required this.tabs,
-    required this.selectedIndex,
-    required this.onChanged,
+    required this.controller,
+    required this.tabWidth,
+    required this.tabHeight,
   });
 
   @override
-  State<AnimatedTopTabs> createState() => _AnimatedTopTabsState();
-}
-
-class _AnimatedTopTabsState extends State<AnimatedTopTabs>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOutCubic,
-    );
-
-    // 0.0 = Left Tab, 1.0 = Right Tab
-    if (widget.selectedIndex == 1) {
-      _controller.value = 1.0;
-    }
-  }
-
-  @override
-  void didUpdateWidget(AnimatedTopTabs oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.selectedIndex != oldWidget.selectedIndex) {
-      if (widget.selectedIndex == 1) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final double highlightWidth =
-        MediaQuery.sizeOf(context).width * 0.6; // Responsive width
+    return SizedBox(
+      width: double.infinity,
+      height: tabHeight,
+      // ONE AnimatedBuilder driving the entire layer, perfectly synced with the TabBarView!
+      child: AnimatedBuilder(
+        animation: controller.animation!,
+        builder: (context, child) {
+          final animationValue = controller.animation!.value.clamp(0.0, 1.0);
+          
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // 1. BASE LAYER: Static unselected texts
+              _buildStaticText(tabs[0], true, animationValue),
+              _buildStaticText(tabs[1], false, animationValue),
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SizedBox(
-          width: constraints.maxWidth,
-          height: 55, // The original SVG height
-          // ONE AnimatedBuilder driving the entire layer
-          child: AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              return Stack(
-                clipBehavior:
-                    Clip.none, // Allow shape to overflow the 50px bounds
-                children: [
-                  // 1. BASE LAYER: Static unselected texts perfectly aligned with the highlight positions
-                  _buildStaticText(
-                    widget.tabs[0],
-                    true,
-                    highlightWidth,
-                    _animation.value,
-                  ),
-                  _buildStaticText(
-                    widget.tabs[1],
-                    false,
-                    highlightWidth,
-                    _animation.value,
-                  ),
+              // 2. HIGHLIGHT LAYER: Moving components (Shape + Text)
+              _buildTabComponent(
+                text: tabs[0],
+                isLeft: true,
+                animationValue: animationValue,
+              ),
+              _buildTabComponent(
+                text: tabs[1],
+                isLeft: false,
+                animationValue: animationValue,
+              ),
 
-                  // 2. HIGHLIGHT LAYER: Moving components (Shape + Text) that clip together
-                  _buildTabComponent(
-                    text: widget.tabs[0],
-                    isLeft: true,
-                    animationValue: _animation.value,
-                    highlightWidth: highlightWidth,
-                  ),
-                  _buildTabComponent(
-                    text: widget.tabs[1],
-                    isLeft: false,
-                    animationValue: _animation.value,
-                    highlightWidth: highlightWidth,
-                  ),
-
-                  // 3. TRANSPARENT HIT AREAS
-                  Positioned.fill(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () => widget.onChanged(0),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () => widget.onChanged(1),
-                          ),
-                        ),
-                      ],
+              // 3. TRANSPARENT HIT AREAS
+              Positioned.fill(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => controller.animateTo(0),
+                      ),
                     ),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
+                    Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => controller.animateTo(1),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildStaticText(
-    String text,
-    bool isLeft,
-    double highlightWidth,
-    double animationValue,
-  ) {
-    const double slideDistance = 20.0;
+  Widget _buildStaticText(String text, bool isLeft, double animationValue) {
+    final double slideDistance = tabWidth * 0.1; // Responsive slide distance
 
-    // Unselected tabs move AWAY from the center to create space.
-    // Left tab moves to -30 when unselected (value -> 1).
-    // Right tab moves to +30 when unselected (value -> 0).
     double slideOffset = isLeft
         ? -slideDistance * animationValue
         : slideDistance * (1.0 - animationValue);
@@ -152,8 +83,8 @@ class _AnimatedTopTabsState extends State<AnimatedTopTabs>
       child: Transform.translate(
         offset: Offset(slideOffset, 0),
         child: SizedBox(
-          width: highlightWidth,
-          height: 66,
+          width: tabWidth,
+          height: tabHeight,
           child: Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -180,20 +111,14 @@ class _AnimatedTopTabsState extends State<AnimatedTopTabs>
     required String text,
     required bool isLeft,
     required double animationValue,
-    required double highlightWidth,
   }) {
-    // Parallax slide distance creates the physical momentum of the travelling shape
-    const double slideDistance = 30.0;
-
-    // Left tab hides as value -> 1. Right tab shows as value -> 1.
+    final double slideDistance = tabWidth * 0.1; // Matches static text slide
     double clipFactor = isLeft ? (1.0 - animationValue) : animationValue;
 
-    // Must perfectly match the slideOffset in _buildStaticText!
     double slideOffset = isLeft
         ? -slideDistance * animationValue
         : slideDistance * (1.0 - animationValue);
 
-    // Wipe boundaries must remain anchored to the center of the transition
     Alignment wipeAlignment = isLeft
         ? Alignment.centerRight
         : Alignment.centerLeft;
@@ -203,9 +128,9 @@ class _AnimatedTopTabsState extends State<AnimatedTopTabs>
       child: Transform.translate(
         offset: Offset(slideOffset, 0),
         child: SizedBox(
-          width: highlightWidth,
-          height: 66,
-          // Highlight + Text are one component and clip together
+          width: tabWidth,
+          height: tabHeight,
+          // Highlight + Text clip together perfectly
           child: Align(
             alignment: wipeAlignment,
             child: ClipRect(
@@ -213,14 +138,14 @@ class _AnimatedTopTabsState extends State<AnimatedTopTabs>
                 alignment: wipeAlignment,
                 widthFactor: clipFactor.clamp(0.0, 1.0),
                 child: SizedBox(
-                  width: highlightWidth,
-                  height: 66,
+                  width: tabWidth,
+                  height: tabHeight,
                   child: Stack(
                     children: [
                       // Highlight Shape
                       RepaintBoundary(
                         child: CustomPaint(
-                          size: Size(highlightWidth, 60),
+                          size: Size(tabWidth, tabHeight),
                           painter: isLeft
                               ? const LeftHighlightPainter()
                               : const RightHighlightPainter(),
@@ -236,8 +161,7 @@ class _AnimatedTopTabsState extends State<AnimatedTopTabs>
                               text,
                               style: TextStyle(
                                 fontFamily: GoogleFonts.manrope().fontFamily,
-                                color: Colors
-                                    .white, // Selected color inside the black highlight
+                                color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -266,7 +190,6 @@ class LeftHighlightPainter extends CustomPainter {
     double scaleY = size.height / 66.0;
     canvas.scale(scaleX, scaleY);
 
-    // NOW_PLAYING_SELECTED is the exact base path but flipped horizontally
     canvas.translate(336.0, 0.0);
     canvas.scale(-1.0, 1.0);
 
@@ -315,7 +238,6 @@ class RightHighlightPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// The EXACT untouched user-provided path
 Path _getBasePath() {
   Path path_0 = Path();
   path_0.moveTo(327.582, 15);
