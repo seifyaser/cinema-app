@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/liquid_glass_navbar.dart';
 
 class MainLayout extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -17,25 +19,30 @@ class MainLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: _onBranchSelected,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
-            label: 'search',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.card_membership_outlined),
-            selectedIcon: Icon(Icons.person),
-            label: 'tickets',
+      extendBody: true,
+      body: Stack(
+        children: [
+          // Base layer: The active screen
+          navigationShell,
+
+          // Floating Liquid Glass Navbar
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: LiquidGlassNavBar(
+              currentIndex: navigationShell.currentIndex,
+              onTap: _onBranchSelected,
+              items: [
+                NavBarItem(icon: CupertinoIcons.home, label: 'Home'),
+                NavBarItem(icon: CupertinoIcons.search, label: 'Search'),
+                NavBarItem(icon: CupertinoIcons.ticket_fill, label: 'Tickets'),
+                NavBarItem(
+                  icon: CupertinoIcons.person_crop_circle,
+                  label: 'Profile',
+                ),
+              ],
+            ),
           ),
         ],
       ),

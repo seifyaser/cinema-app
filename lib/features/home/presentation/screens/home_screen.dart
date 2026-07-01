@@ -69,20 +69,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: Column(
+              padding: const EdgeInsets.only(top: 10.0),
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  AnimatedTopTabs(
-                    tabs: _tabs,
-                    selectedIndex: _selectedIndex,
-                    onChanged: _onTabChanged,
-                  ),
-
-                  Expanded(
+                  // Main Content Container (bottom layer in stack)
+                  Positioned(
+                    top: 50.0, // Matches the height of the tab's bounding box
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 400),
                       curve: Curves.easeInOutCubic,
-                      width: double.infinity,
                       decoration: BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.only(
@@ -105,6 +104,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  
+                  // Top Tabs (top layer in stack) - draws *over* the container
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: AnimatedTopTabs(
+                      tabs: _tabs,
+                      selectedIndex: _selectedIndex,
+                      onChanged: _onTabChanged,
                     ),
                   ),
                 ],

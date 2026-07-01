@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:project/core/router/app_router.dart';
+import 'package:device_preview/device_preview.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
@@ -10,7 +12,13 @@ void main() {
       statusBarBrightness: Brightness.dark,
     ),
   );
-  runApp(const MyApp());
+  runApp(
+    // DevicePreview(
+    //   enabled: !kReleaseMode,
+    //   builder: (context) => MyApp(), // Wrap your app
+    // ),
+    MyApp(),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -19,6 +27,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      useInheritedMediaQuery: true,
+      locale: DevicePreview.locale(context),
+      builder: DevicePreview.appBuilder,
       title: 'Cinematic Immersive',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

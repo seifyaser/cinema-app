@@ -14,6 +14,7 @@ abstract class AppRouter {
   // Navigation Screens
   static const String homeRoute = '/home';
   static const String discoverRoute = '/discover';
+  static const String ticketsRoute = '/tickets';
   static const String profileRoute = '/profile';
 
   static GoRouter router() {
@@ -62,9 +63,21 @@ abstract class AppRouter {
             StatefulShellBranch(
               routes: [
                 GoRoute(
+                  path: ticketsRoute,
+                  builder: (context, state) => const Scaffold(
+                    body: Center(child: Text('Tickets Screen')),
+                  ),
+                ),
+              ],
+            ),
+
+            /// profile
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
                   path: profileRoute,
                   builder: (context, state) => const Scaffold(
-                    body: Center(child: Text('tickets Screen')),
+                    body: Center(child: Text('Profile Screen')),
                   ),
                 ),
               ],

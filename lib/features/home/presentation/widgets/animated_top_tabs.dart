@@ -60,18 +60,21 @@ class _AnimatedTopTabsState extends State<AnimatedTopTabs>
 
   @override
   Widget build(BuildContext context) {
-    const double highlightWidth = 250.0; // Fixed width for the highlight widget
+    final double highlightWidth =
+        MediaQuery.sizeOf(context).width * 0.6; // Responsive width
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return SizedBox(
           width: constraints.maxWidth,
-          height: 60, // The original SVG height
+          height: 55, // The original SVG height
           // ONE AnimatedBuilder driving the entire layer
           child: AnimatedBuilder(
             animation: _animation,
             builder: (context, child) {
               return Stack(
+                clipBehavior:
+                    Clip.none, // Allow shape to overflow the 50px bounds
                 children: [
                   // 1. BASE LAYER: Static unselected texts perfectly aligned with the highlight positions
                   _buildStaticText(
@@ -135,7 +138,7 @@ class _AnimatedTopTabsState extends State<AnimatedTopTabs>
     double highlightWidth,
     double animationValue,
   ) {
-    const double slideDistance = 30.0;
+    const double slideDistance = 20.0;
 
     // Unselected tabs move AWAY from the center to create space.
     // Left tab moves to -30 when unselected (value -> 1).
@@ -152,13 +155,19 @@ class _AnimatedTopTabsState extends State<AnimatedTopTabs>
           width: highlightWidth,
           height: 66,
           child: Center(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontFamily: GoogleFonts.manrope().fontFamily,
-                color: Colors.grey, // Static unselected color (inactive)
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.manrope().fontFamily,
+                    color: Colors.grey, // Static unselected color (inactive)
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ),
@@ -211,7 +220,7 @@ class _AnimatedTopTabsState extends State<AnimatedTopTabs>
                       // Highlight Shape
                       RepaintBoundary(
                         child: CustomPaint(
-                          size: Size(highlightWidth, 66),
+                          size: Size(highlightWidth, 60),
                           painter: isLeft
                               ? const LeftHighlightPainter()
                               : const RightHighlightPainter(),
@@ -219,13 +228,20 @@ class _AnimatedTopTabsState extends State<AnimatedTopTabs>
                       ),
                       // Text perfectly attached and centered inside the highlight
                       Center(
-                        child: Text(
-                          text,
-                          style: TextStyle(
-                            fontFamily: GoogleFonts.manrope().fontFamily,
-                            color: Colors.white, // Selected color inside the black highlight
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              text,
+                              style: TextStyle(
+                                fontFamily: GoogleFonts.manrope().fontFamily,
+                                color: Colors
+                                    .white, // Selected color inside the black highlight
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ),

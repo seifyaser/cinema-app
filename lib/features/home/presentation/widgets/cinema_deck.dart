@@ -48,6 +48,8 @@ class _CinemaDeckState extends State<CinemaDeck>
   static const double _flingVelocityThreshold = 720.0;
 
   late final AnimationController _controller;
+  final ValueNotifier<double> _dragPixels = ValueNotifier(0.0);
+  late final Listenable _animationListenable;
 
   // Logical index is intentionally unbounded. The movie index is derived with
   // modulo, but physical card identity remains stable across wrap-around.
@@ -57,21 +59,33 @@ class _CinemaDeckState extends State<CinemaDeck>
   // rebuilt halfway through a transition.
   List<int>? _frozenLogicalIndices;
 
-  double _dragPixels = 0.0;
   double _cardHeight = 1.0;
   int _exitDirection = -1; // -1 = exits up, 1 = falls down
   bool _isDragging = false;
   bool _isAnimating = false;
 
+  // Caching layer to avoid rebuilding MovieCards and static decorations
+  final Map<int, Widget> _cardCache = {};
+  double _lastWidth = 0.0;
+  double _lastHeight = 0.0;
+
   @override
   void initState() {
     super.initState();
     _controller = AnimationController.unbounded(vsync: this);
+    _animationListenable = Listenable.merge([_controller, _dragPixels]);
   }
 
   @override
   void didUpdateWidget(covariant CinemaDeck oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    // If the parent rebuilds CinemaDeck (e.g., due to updated movie data, 
+    // new itemBuilder, or external state change), we clear the cache to 
+    // ensure the new data is rendered. 
+    // Since drag and animation updates are isolated to internal ValueNotifiers,
+    // they NEVER trigger didUpdateWidget, preserving our O(1) scroll performance!
+    _cardCache.clear();
 
     if (widget.itemCount == 0) {
       _currentLogicalIndex = 0;
@@ -87,7 +101,22 @@ class _CinemaDeckState extends State<CinemaDeck>
   @override
   void dispose() {
     _controller.dispose();
+    _dragPixels.dispose();
     super.dispose();
+  }
+
+  void _clearCacheIfConstraintsChanged(double width, double height) {
+    if (width != _lastWidth || height != _lastHeight) {
+      _cardCache.clear();
+      _lastWidth = width;
+      _lastHeight = height;
+    }
+  }
+
+  void _evictOldCards(List<int> visibleIndices) {
+    if (_cardCache.length > _snapshotCount * 2) {
+      _cardCache.removeWhere((key, _) => !visibleIndices.contains(key));
+    }
   }
 
   @override
@@ -109,8 +138,10 @@ class _CinemaDeckState extends State<CinemaDeck>
           final cardHeight = height * 0.85;
           _cardHeight = math.max(cardHeight, 1.0);
 
+          _clearCacheIfConstraintsChanged(width, height);
+
           return AnimatedBuilder(
-            animation: _controller,
+            animation: _animationListenable,
             builder: (context, _) {
               return Stack(
                 alignment: Alignment.center,
@@ -126,69 +157,62 @@ class _CinemaDeckState extends State<CinemaDeck>
 
   List<Widget> _buildCards(double cardWidth, double cardHeight) {
     final logicalIndices = _visibleLogicalIndices();
+    _evictOldCards(logicalIndices);
+
     final progress = _promotionProgress();
     final cards = <Widget>[];
 
     // Build deepest to nearest so the active card is painted last.
     for (int depth = logicalIndices.length - 1; depth >= 0; depth--) {
       final logicalIndex = logicalIndices[depth];
-      final movieIndex = _movieIndexFor(logicalIndex);
-      final child = widget.itemBuilder(context, movieIndex);
+      
+      Widget? cachedCard = _cardCache[logicalIndex];
+      if (cachedCard == null) {
+        final movieIndex = _movieIndexFor(logicalIndex);
+        final child = widget.itemBuilder(context, movieIndex);
+        
+        cachedCard = RepaintBoundary(
+          key: ValueKey<int>(logicalIndex),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(widget.borderRadius),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x73000000),
+                  blurRadius: 28.0,
+                  spreadRadius: -8.0,
+                  offset: Offset(0.0, 22.0),
+                ),
+                BoxShadow(
+                  color: Color(0x26000000),
+                  blurRadius: 48.0,
+                  spreadRadius: -18.0,
+                  offset: Offset(0.0, 44.0),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(widget.borderRadius),
+              child: SizedBox(width: cardWidth, height: cardHeight, child: child),
+            ),
+          ),
+        );
+        _cardCache[logicalIndex] = cachedCard;
+      }
 
       cards.add(
-        RepaintBoundary(
-          key: ValueKey<int>(logicalIndex),
-          child: _buildCardShell(
-            width: cardWidth,
-            height: cardHeight,
+        Transform(
+          transform: _matrixFor(depth, progress, cardHeight),
+          alignment: Alignment.center,
+          child: Opacity(
             opacity: _opacityFor(depth, progress),
-            matrix: _matrixFor(depth, progress, cardHeight),
-            child: child,
+            child: cachedCard,
           ),
         ),
       );
     }
 
     return cards;
-  }
-
-  Widget _buildCardShell({
-    required double width,
-    required double height,
-    required double opacity,
-    required Matrix4 matrix,
-    required Widget child,
-  }) {
-    return Transform(
-      transform: matrix,
-      alignment: Alignment.center,
-      child: Opacity(
-        opacity: opacity,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x73000000),
-                blurRadius: 28.0,
-                spreadRadius: -8.0,
-                offset: Offset(0.0, 22.0),
-              ),
-              BoxShadow(
-                color: Color(0x26000000),
-                blurRadius: 48.0,
-                spreadRadius: -18.0,
-                offset: Offset(0.0, 44.0),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-            child: SizedBox(width: width, height: height, child: child),
-          ),
-        ),
-      ),
-    );
   }
 
   Matrix4 _matrixFor(int depth, double progress, double cardHeight) {
@@ -204,12 +228,12 @@ class _CinemaDeckState extends State<CinemaDeck>
 
     return Matrix4.identity()
       ..setEntry(3, 2, 0.0012)
-      ..translateByDouble(0.0, translateY, 0.0, 1.0)
-      ..scaleByDouble(scale, scale, 1.0, 1.0);
+      ..translate(0.0, translateY, 0.0)
+      ..scale(scale, scale, 1.0);
   }
 
   Matrix4 _frontCardMatrix(double progress, double cardHeight) {
-    final signedDragProgress = _dragPixels / math.max(cardHeight, 1.0);
+    final signedDragProgress = _dragPixels.value / math.max(cardHeight, 1.0);
     final activeDirection = _isDragging
         ? (signedDragProgress < 0.0 ? -1 : 1)
         : _exitDirection;
@@ -222,11 +246,10 @@ class _CinemaDeckState extends State<CinemaDeck>
 
     return Matrix4.identity()
       ..setEntry(3, 2, 0.0014)
-      ..translateByDouble(0.0, translateY, 0.0, 1.0)
-      ..translateByDouble(0.0, cardHeight * 0.48, 0.0, 1.0)
+      ..translate(0.0, translateY + cardHeight * 0.48, 0.0)
       ..rotateZ(rotation)
-      ..translateByDouble(0.0, -cardHeight * 0.48, 0.0, 1.0)
-      ..scaleByDouble(scale, scale, 1.0, 1.0);
+      ..translate(0.0, -cardHeight * 0.48, 0.0)
+      ..scale(scale, scale, 1.0);
   }
 
   double _opacityFor(int depth, double progress) {
@@ -245,7 +268,7 @@ class _CinemaDeckState extends State<CinemaDeck>
     }
 
     if (_isDragging) {
-      return (_dragPixels / math.max(_cardHeight, 1.0)).abs().clamp(0.0, 1.0);
+      return (_dragPixels.value / math.max(_cardHeight, 1.0)).abs().clamp(0.0, 1.0);
     }
 
     return 0.0;
@@ -283,24 +306,24 @@ class _CinemaDeckState extends State<CinemaDeck>
 
     setState(() {
       _isDragging = true;
-      _dragPixels = 0.0;
+      _dragPixels.value = 0.0;
     });
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
     if (!_isDragging || _isAnimating) return;
 
-    setState(() {
-      _dragPixels += details.primaryDelta ?? 0.0;
-      _exitDirection = _dragPixels < 0.0 ? -1 : 1;
-    });
+    // Directly updating the ValueNotifier avoids a full widget tree rebuild
+    // via setState, keeping the animation ultra-smooth.
+    _dragPixels.value += details.primaryDelta ?? 0.0;
+    _exitDirection = _dragPixels.value < 0.0 ? -1 : 1;
   }
 
   void _handleDragEnd(DragEndDetails details) {
     if (!_isDragging || _isAnimating) return;
 
     final velocity = details.primaryVelocity ?? 0.0;
-    final dragFraction = (_dragPixels / math.max(_cardHeight, 1.0)).abs();
+    final dragFraction = (_dragPixels.value / math.max(_cardHeight, 1.0)).abs();
     final shouldAdvance =
         dragFraction > _swipeThreshold ||
         velocity.abs() > _flingVelocityThreshold;
@@ -322,8 +345,8 @@ class _CinemaDeckState extends State<CinemaDeck>
       return velocity < 0.0 ? -1 : 1;
     }
 
-    if (_dragPixels.abs() > 1.0) {
-      return _dragPixels < 0.0 ? -1 : 1;
+    if (_dragPixels.value.abs() > 1.0) {
+      return _dragPixels.value < 0.0 ? -1 : 1;
     }
 
     return -1;
@@ -332,7 +355,7 @@ class _CinemaDeckState extends State<CinemaDeck>
   Future<void> _animateToNext(double velocity) async {
     _freezeVisibleCards();
 
-    final start = (_dragPixels / math.max(_cardHeight, 1.0)).abs().clamp(
+    final start = (_dragPixels.value / math.max(_cardHeight, 1.0)).abs().clamp(
       0.0,
       1.0,
     );
@@ -364,7 +387,7 @@ class _CinemaDeckState extends State<CinemaDeck>
 
     setState(() {
       _currentLogicalIndex += 1;
-      _dragPixels = 0.0;
+      _dragPixels.value = 0.0;
       _controller.value = 0.0;
       _frozenLogicalIndices = null;
       _isAnimating = false;
@@ -374,7 +397,7 @@ class _CinemaDeckState extends State<CinemaDeck>
   }
 
   Future<void> _animateBack(double velocity) async {
-    final start = (_dragPixels / math.max(_cardHeight, 1.0)).abs().clamp(
+    final start = (_dragPixels.value / math.max(_cardHeight, 1.0)).abs().clamp(
       0.0,
       1.0,
     );
@@ -402,10 +425,11 @@ class _CinemaDeckState extends State<CinemaDeck>
     if (!mounted) return;
 
     setState(() {
-      _dragPixels = 0.0;
+      _dragPixels.value = 0.0;
       _controller.value = 0.0;
       _frozenLogicalIndices = null;
       _isAnimating = false;
     });
   }
 }
+
