@@ -53,7 +53,11 @@ class MovieCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_buildTag(movie.duration), _gap, _buildTag(movie.type)],
+            children: [
+              _buildTag(movie.duration),
+              _gap,
+              _buildTag(movie.type),
+            ],
           ),
         ),
       ),

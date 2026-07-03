@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:project/core/router/app_router.dart';
 import '../../data/models/movie_data.dart';
 import 'cinema_deck.dart';
 import 'movie_card.dart';
@@ -58,7 +60,12 @@ class _NowPlayingViewState extends State<NowPlayingView> {
             onIndexChanged: widget.onIndexChanged,
             itemBuilder: (context, index) {
               final movie = MovieData.mockMovies[index];
-              return MovieCard(key: ValueKey(movie.title), movie: movie);
+              return GestureDetector(
+                onTap: () {
+                  context.push(AppRouter.movieDetailsRoute, extra: movie);
+                },
+                child: MovieCard(key: ValueKey(movie.title), movie: movie),
+              );
             },
           ),
         ),

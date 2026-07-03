@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:project/features/home/data/models/movie_data.dart';
+import 'package:project/features/home/presentation/screens/MovieScreenDetails.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -16,6 +18,7 @@ abstract class AppRouter {
   static const String discoverRoute = '/discover';
   static const String ticketsRoute = '/tickets';
   static const String profileRoute = '/profile';
+  static const String movieDetailsRoute = '/movieDetails';
 
   static GoRouter router() {
     return GoRouter(
@@ -29,6 +32,11 @@ abstract class AppRouter {
         GoRoute(
           path: registerRoute,
           builder: (context, state) => const RegisterScreen(),
+        ),
+        GoRoute(
+          path: movieDetailsRoute,
+          builder: (context, state) =>
+              MovieDetailsScreen(movie: state.extra as MovieData),
         ),
 
         // ================= MAIN LAYOUT (Stateful Bottom Nav) =================
