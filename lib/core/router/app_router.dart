@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project/features/home/data/models/movie_data.dart';
 import 'package:project/features/home/presentation/screens/MovieScreenDetails.dart';
+import 'package:project/features/booking/presentation/screens/booking_screen.dart';
+import 'package:project/features/booking/presentation/screens/checkout_screen.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -19,6 +21,8 @@ abstract class AppRouter {
   static const String ticketsRoute = '/tickets';
   static const String profileRoute = '/profile';
   static const String movieDetailsRoute = '/movieDetails';
+  static const String bookingRoute = '/booking';
+  static const String checkoutRoute = '/checkout';
 
   static GoRouter router() {
     return GoRouter(
@@ -37,6 +41,15 @@ abstract class AppRouter {
           path: movieDetailsRoute,
           builder: (context, state) =>
               MovieDetailsScreen(movie: state.extra as MovieData),
+        ),
+        GoRoute(
+          path: bookingRoute,
+          builder: (context, state) =>
+              BookingScreen(movie: state.extra as MovieData),
+        ),
+        GoRoute(
+          path: checkoutRoute,
+          builder: (context, state) => const CheckoutScreen(),
         ),
 
         // ================= MAIN LAYOUT (Stateful Bottom Nav) =================

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:project/core/router/app_router.dart';
+import 'package:project/features/home/data/models/movie_data.dart';
 
 class BookNowButton extends StatelessWidget {
-  const BookNowButton({super.key});
+  final MovieData movie;
+  const BookNowButton({super.key, required this.movie});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +35,9 @@ class BookNowButton extends StatelessWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(40),
-                    onTap: () {},
+                    onTap: () {
+                      context.push(AppRouter.bookingRoute, extra: movie);
+                    },
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

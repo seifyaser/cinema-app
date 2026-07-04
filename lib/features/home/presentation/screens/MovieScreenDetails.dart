@@ -68,7 +68,7 @@ class MovieDetailsScreen extends StatelessWidget {
             ),
           ),
           MovieDetailsTopBar(movie: movie),
-          const BookNowButton(),
+          BookNowButton(movie: movie),
         ],
       ),
     );
