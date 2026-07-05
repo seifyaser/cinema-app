@@ -7,6 +7,10 @@ import '../widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../widgets/social_icon_button.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubit/auth_cubit.dart';
+import '../cubit/auth_state.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -15,14 +19,35 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isPasswordObscured = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return AuthBackground(
-      child: ListView(
+    return BlocConsumer<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthSuccess) {
+          context.go(AppRouter.homeRoute);
+        } else if (state is AuthFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        return AuthBackground(
+          child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 28),
 
         children: [
@@ -81,9 +106,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
           const SizedBox(height: 40),
 
-          const CustomTextField(
+          CustomTextField(
             label: "EMAIL ADDRESS",
             hintText: "name@example.com",
+            controller: _emailController,
+            enabled: !isLoading,
           ),
 
           const SizedBox(height: 24),
@@ -92,6 +119,8 @@ class _LoginScreenState extends State<LoginScreen> {
             label: "PASSWORD",
             hintText: "••••••••",
             obscureText: _isPasswordObscured,
+            controller: _passwordController,
+            enabled: !isLoading,
             suffixIcon: IconButton(
               icon: Icon(
                 _isPasswordObscured
@@ -125,10 +154,16 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 25),
 
           PrimaryButton(
-            text: "Sign In",
-            onPressed: () {
-              context.go(AppRouter.homeRoute);
-            },
+            text: isLoading ? "Signing In..." : "Sign In",
+            onPressed: isLoading
+                ? null
+                : () {
+                    final email = _emailController.text.trim();
+                    final password = _passwordController.text;
+                    if (email.isNotEmpty && password.isNotEmpty) {
+                      context.read<AuthCubit>().login(email, password);
+                    }
+                  },
           ),
 
           const SizedBox(height: 35),
@@ -199,6 +234,8 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 30),
         ],
       ),
+    );
+      },
     );
   }
 }

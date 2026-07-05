@@ -8,29 +8,31 @@ import 'package:flutter/foundation.dart';
 /// sl.registerLazySingleton<ApiService>(() => ApiService());
 /// ```
 class ApiService {
-  ApiService({String? baseUrl}) {
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: baseUrl ?? _defaultBaseUrl,
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 15),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ),
-    )..interceptors.addAll([
-        _AuthInterceptor(),
-        _LoggingInterceptor(),
-        _ErrorInterceptor(),
-      ]);
+  ApiService() {
+    _dio =
+        Dio(
+            BaseOptions(
+              baseUrl: baseUrl,
+              connectTimeout: const Duration(seconds: 15),
+              receiveTimeout: const Duration(seconds: 15),
+              sendTimeout: const Duration(seconds: 15),
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+            ),
+          )
+          ..interceptors.addAll([
+            _AuthInterceptor(),
+            _LoggingInterceptor(),
+            _ErrorInterceptor(),
+          ]);
   }
 
   late final Dio _dio;
 
   // TODO: Replace with your actual base URL.
-  static const String _defaultBaseUrl = 'https://api.example.com';
+  static const String baseUrl = 'http://localhost:3000/api/v1/';
 
   // ---------------------------------------------------------------------------
   // Public HTTP methods

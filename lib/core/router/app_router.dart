@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project/features/home/data/models/movie_data.dart';
 import 'package:project/features/home/presentation/screens/MovieScreenDetails.dart';
@@ -7,8 +8,10 @@ import 'package:project/features/booking/presentation/screens/checkout_screen.da
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../shared/main_layout.dart';
+import '../di/dependency_injection.dart' as di;
 
 abstract class AppRouter {
   // Auth Screens (User will provide implementation)
@@ -31,11 +34,17 @@ abstract class AppRouter {
         // ================= AUTH =================
         GoRoute(
           path: loginRoute,
-          builder: (context, state) => const LoginScreen(),
+          builder: (context, state) => BlocProvider(
+            create: (_) => di.sl<AuthCubit>(),
+            child: const LoginScreen(),
+          ),
         ),
         GoRoute(
           path: registerRoute,
-          builder: (context, state) => const RegisterScreen(),
+          builder: (context, state) => BlocProvider(
+            create: (_) => di.sl<AuthCubit>(),
+            child: const RegisterScreen(),
+          ),
         ),
         GoRoute(
           path: movieDetailsRoute,

@@ -6,6 +6,8 @@ class CustomTextField extends StatelessWidget {
   final String hintText;
   final bool obscureText;
   final Widget? suffixIcon;
+  final TextEditingController? controller;
+  final bool enabled;
 
   const CustomTextField({
     super.key,
@@ -13,6 +15,8 @@ class CustomTextField extends StatelessWidget {
     required this.hintText,
     this.obscureText = false,
     this.suffixIcon,
+    this.controller,
+    this.enabled = true,
   });
 
   @override
@@ -33,6 +37,8 @@ class CustomTextField extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         TextFormField(
+          controller: controller,
+          enabled: enabled,
           onTapOutside: (_) {
             FocusScope.of(context).unfocus();
           },
