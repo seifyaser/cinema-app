@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:project/features/booking/presentation/widgets/liquid_glass_alert.dart';
 import 'package:project/features/home/data/models/movie_data.dart';
+import 'package:project/features/home/presentation/widgets/liquid_glass_back_button.dart';
 import 'package:project/features/home/presentation/widgets/movie_details_background.dart';
 
 import '../widgets/booking_summary_card.dart';
@@ -50,6 +53,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void initState() {
     super.initState();
     _startTimer();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showLiquidGlassAlert(
+        context: context,
+        title: "Pending Payment",
+        content:
+            "These tickets are held for you. You have 5 minutes to complete the payment process or reservation will be canceled",
+      );
+    });
   }
 
   void _startTimer() {
@@ -95,28 +107,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF131313),
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.white,
-            size: 20,
-          ),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text(
-          "Checkout",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.0,
-          ),
-        ),
-        centerTitle: true,
-      ),
+
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -141,11 +132,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 20),
 
-                    CheckoutTimerDisplay(
-                      formattedTime: _formattedTime,
-                      isUrgent: isUrgent,
+                    // Custom App Bar
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const LiquidGlassBackButton(
+                          icon: Icons.arrow_back_ios_new,
+                          text: "Back",
+                        ),
+                        CheckoutTimerDisplay(
+                          formattedTime: _formattedTime,
+                          isUrgent: isUrgent,
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 30),
