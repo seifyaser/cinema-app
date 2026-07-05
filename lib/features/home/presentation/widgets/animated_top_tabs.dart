@@ -7,6 +7,10 @@ class AnimatedTopTabs extends StatelessWidget {
   final double tabWidth;
   final double tabHeight;
 
+  // Cached once at class level — prevents new TextStyle allocation every
+  // animation frame inside the AnimatedBuilder (~60 allocs/sec otherwise).
+  static final String _fontFamily = GoogleFonts.manrope().fontFamily!;
+
   const AnimatedTopTabs({
     super.key,
     required this.tabs,
@@ -93,8 +97,8 @@ class AnimatedTopTabs extends StatelessWidget {
                 child: Text(
                   text,
                   style: TextStyle(
-                    fontFamily: GoogleFonts.manrope().fontFamily,
-                    color: Colors.grey, // Static unselected color (inactive)
+                    fontFamily: _fontFamily,
+                    color: Colors.grey,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -160,7 +164,7 @@ class AnimatedTopTabs extends StatelessWidget {
                             child: Text(
                               text,
                               style: TextStyle(
-                                fontFamily: GoogleFonts.manrope().fontFamily,
+                                fontFamily: _fontFamily,
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

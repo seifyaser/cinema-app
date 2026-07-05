@@ -14,10 +14,15 @@ class MovieDetailsBackground extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+            imageFilter: ImageFilter.blur(
+              sigmaX: 22,
+              sigmaY: 22,
+              tileMode: TileMode.decal,
+            ),
             child: Image.network(
               movie.imageurl,
               fit: BoxFit.cover,
+              cacheWidth: 300,
               cacheHeight: 400,
             ),
           ),

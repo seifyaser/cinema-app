@@ -12,7 +12,7 @@ class MovieCastList extends StatelessWidget {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: mockCast.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 16),
+          separatorBuilder: (_, _) => const SizedBox(width: 16),
           itemBuilder: (_, index) {
             final actor = mockCast[index];
 

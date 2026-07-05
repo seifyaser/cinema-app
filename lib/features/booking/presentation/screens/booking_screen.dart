@@ -19,7 +19,7 @@ class BookingScreen extends StatefulWidget {
 }
 
 class _BookingScreenState extends State<BookingScreen> {
-  int _selectedDateIndex = 0;
+  final int _selectedDateIndex = 0;
   int _numberOfSeats = 0;
   String _selectedTime = "7:30 PM";
 
@@ -43,23 +43,11 @@ class _BookingScreenState extends State<BookingScreen> {
     ];
   }
 
-  void _updateSeatCount() {
-    int count = 0;
-    for (var row in _seats) {
-      for (var seat in row) {
-        if (seat == 1) count++;
-      }
-    }
-    setState(() {
-      _numberOfSeats = count;
-    });
-  }
-
   void _handleSeatTap(int rowIndex, int colIndex) {
     final state = _seats[rowIndex][colIndex];
     if (state == -1 || state == 2) return; // Aisle or occupied
-    
-    bool isSelected = state == 1;
+
+    final bool isSelected = state == 1;
 
     if (!isSelected && _numberOfSeats >= 10) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,9 +58,17 @@ class _BookingScreenState extends State<BookingScreen> {
       );
       return;
     }
+
     setState(() {
       _seats[rowIndex][colIndex] = isSelected ? 0 : 1;
-      _updateSeatCount();
+      // Recount inline — no nested setState call
+      int count = 0;
+      for (final row in _seats) {
+        for (final s in row) {
+          if (s == 1) count++;
+        }
+      }
+      _numberOfSeats = count;
     });
   }
 

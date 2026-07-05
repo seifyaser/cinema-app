@@ -14,7 +14,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late TabController _tabController;
-  int _selectedIndex = 0;
+  // ValueNotifier avoids rebuilding the whole screen during tab swipe.
+  // Only the corner-radius Container subscribes via ValueListenableBuilder.
+  final ValueNotifier<int> _selectedIndexNotifier = ValueNotifier(1);
   int _cinemaIndex = 0;
 
   final List<String> _tabs = const ["Coming Soon", "Now Playing"];
@@ -27,14 +29,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
       initialIndex: 1,
     );
-    _selectedIndex = 1;
 
     _tabController.animation!.addListener(() {
-      int newIndex = _tabController.animation!.value.round();
-      if (_selectedIndex != newIndex) {
-        setState(() {
-          _selectedIndex = newIndex;
-        });
+      final newIndex = _tabController.animation!.value.round();
+      if (_selectedIndexNotifier.value != newIndex) {
+        _selectedIndexNotifier.value = newIndex;
       }
     });
   }
@@ -42,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _tabController.dispose();
+    _selectedIndexNotifier.dispose();
     super.dispose();
   }
 
@@ -49,15 +49,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final double screenHeight = MediaQuery.sizeOf(context).height;
 
-    // Calculate perfectly responsive dimensions to maintain SVG aspect ratio
     final double tabWidth = screenWidth * 0.6;
-    // Making the top bar slightly taller by increasing the virtual height from 66 to 80
     final double tabHeight = tabWidth * (80.0 / 336.0);
-
-    // Position the main container to overlap underneath the curve
-    final double overlap = 5.0; // Ensures no 1px anti-aliasing cracks
+    final double overlap = 5.0;
     final double containerTopOffset = tabHeight - overlap;
 
     return Scaffold(
@@ -78,39 +73,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Main Content Container (bottom layer in stack)
-                  Positioned(
-                    top: containerTopOffset,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.only(
-                          topLeft: _selectedIndex == 1
-                              ? const Radius.circular(40)
-                              : Radius.zero,
-                          topRight: _selectedIndex == 0
-                              ? const Radius.circular(40)
-                              : Radius.zero,
-                        ),
-                      ),
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildPlaceholderContent("Coming Soon"),
-                          NowPlayingView(
-                            onIndexChanged: (index) {
-                              setState(() => _cinemaIndex = index);
-                            },
+                  // ValueListenableBuilder rebuilds ONLY this Container on tab
+                  // swipe — AnimatedMovieBackground is fully unaffected.
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedIndexNotifier,
+                    builder: (context, selectedIndex, child) {
+                      return Positioned(
+                        top: containerTopOffset,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.only(
+                              topLeft: selectedIndex == 1
+                                  ? const Radius.circular(40)
+                                  : Radius.zero,
+                              topRight: selectedIndex == 0
+                                  ? const Radius.circular(40)
+                                  : Radius.zero,
+                            ),
                           ),
-                        ],
-                      ),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildPlaceholderContent("Coming Soon"),
+                        NowPlayingView(
+                          onIndexChanged: (index) {
+                            setState(() => _cinemaIndex = index);
+                          },
+                        ),
+                      ],
                     ),
                   ),
 
-                  // Top Tabs (top layer in stack) - draws *over* the container
                   Positioned(
                     top: 0,
                     left: 0,

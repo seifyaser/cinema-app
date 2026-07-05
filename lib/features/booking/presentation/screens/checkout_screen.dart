@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:project/features/booking/presentation/widgets/liquid_glass_alert.dart';
 import 'package:project/features/home/data/models/movie_data.dart';
 import 'package:project/features/home/presentation/widgets/liquid_glass_back_button.dart';

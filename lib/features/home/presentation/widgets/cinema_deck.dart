@@ -176,18 +176,14 @@ class _CinemaDeckState extends State<CinemaDeck>
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(widget.borderRadius),
+              // Single shadow with tighter blur — two shadows at blurRadius 28+48
+              // were the biggest single raster cost per card during swipe.
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x73000000),
-                  blurRadius: 28.0,
-                  spreadRadius: -8.0,
-                  offset: Offset(0.0, 22.0),
-                ),
-                BoxShadow(
-                  color: Color(0x26000000),
-                  blurRadius: 48.0,
-                  spreadRadius: -18.0,
-                  offset: Offset(0.0, 44.0),
+                  color: Color(0x66000000),
+                  blurRadius: 18.0,
+                  spreadRadius: -6.0,
+                  offset: Offset(0.0, 16.0),
                 ),
               ],
             ),
@@ -200,16 +196,17 @@ class _CinemaDeckState extends State<CinemaDeck>
         _cardCache[logicalIndex] = cachedCard;
       }
 
-      cards.add(
-        Transform(
-          transform: _matrixFor(depth, progress, cardHeight),
-          alignment: Alignment.center,
-          child: Opacity(
-            opacity: _opacityFor(depth, progress),
-            child: cachedCard,
-          ),
-        ),
+      final double opacity = _opacityFor(depth, progress);
+      // Avoid Opacity widget entirely when fully opaque — it forces a
+      // compositing layer even at opacity 1.0, costing GPU time on every card.
+      final Widget positioned = Transform(
+        transform: _matrixFor(depth, progress, cardHeight),
+        alignment: Alignment.center,
+        child: opacity < 1.0
+            ? Opacity(opacity: opacity, child: cachedCard)
+            : cachedCard,
       );
+      cards.add(positioned);
     }
 
     return cards;

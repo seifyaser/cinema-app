@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
@@ -14,6 +13,9 @@ class CheckoutTimerDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // LiquidGlassLayer is OUTSIDE AnimatedContainer so the glass shell
+    // is a static composited layer. Only the inner border color animates —
+    // the GPU does not recomposite the full glass effect every tick.
     return LiquidGlassLayer(
       settings: LiquidGlassSettings(
         thickness: 20,
@@ -51,7 +53,6 @@ class CheckoutTimerDisplay extends StatelessWidget {
                   color: isUrgent ? Colors.redAccent : Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ],
