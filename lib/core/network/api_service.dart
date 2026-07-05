@@ -1,14 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:project/core/storage/token_storage.dart';
 
 /// Central Dio client with interceptors and the 4 HTTP methods.
 ///
 /// Register this as a singleton via get_it:
 /// ```dart
-/// sl.registerLazySingleton<ApiService>(() => ApiService());
+/// sl.registerLazySingleton<ApiService>(() => ApiService(sl()));
 /// ```
 class ApiService {
-  ApiService() {
+  ApiService(this._tokenStorage) {
     _dio =
         Dio(
             BaseOptions(
@@ -23,13 +24,14 @@ class ApiService {
             ),
           )
           ..interceptors.addAll([
-            _AuthInterceptor(),
+            _AuthInterceptor(_tokenStorage),
             _LoggingInterceptor(),
             _ErrorInterceptor(),
           ]);
   }
 
   late final Dio _dio;
+  final TokenStorage _tokenStorage;
 
   // TODO: Replace with your actual base URL.
   static const String baseUrl = 'http://localhost:3000/api/v1/';
@@ -114,13 +116,19 @@ class ApiService {
 
 /// Attaches the auth token to every outgoing request.
 class _AuthInterceptor extends Interceptor {
+  _AuthInterceptor(this._tokenStorage);
+
+  final TokenStorage _tokenStorage;
+
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // TODO: Read token from secure storage and attach it.
-    // final token = sl<TokenStorage>().accessToken;
-    // if (token != null) {
-    //   options.headers['Authorization'] = 'Bearer $token';
-    // }
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final token = await _tokenStorage.getToken();
+    if (token != null) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
     handler.next(options);
   }
 }
@@ -131,6 +139,7 @@ class _LoggingInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (kDebugMode) {
       debugPrint('[API] → ${options.method} ${options.uri}');
+      debugPrint('[API] Token: ${options.headers['Authorization']}');
       if (options.data != null) {
         debugPrint('[API] Body: ${options.data}');
       }

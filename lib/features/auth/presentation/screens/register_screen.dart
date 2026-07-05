@@ -186,7 +186,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 40),
 
               PrimaryButton(
-                text: isLoading ? "Signing Up..." : "Sign Up",
+                text: "Sign Up",
+                isLoading: isLoading,
                 onPressed: isLoading
                     ? null
                     : () {

@@ -154,7 +154,8 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 25),
 
           PrimaryButton(
-            text: isLoading ? "Signing In..." : "Sign In",
+            text: "Sign In",
+            isLoading: isLoading,
             onPressed: isLoading
                 ? null
                 : () {
