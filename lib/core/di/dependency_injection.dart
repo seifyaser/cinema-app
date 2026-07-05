@@ -9,8 +9,8 @@ Future<void> init() async {
   // Core
   sl.registerLazySingleton<ApiService>(() => ApiService());
 
-  // Repositories
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepository(sl()));
+  // Repositories — register implementation against abstract interface
+  sl.registerLazySingleton<AuthRepo>(() => AuthRepository(sl()));
 
   // Cubits
   sl.registerFactory<AuthCubit>(() => AuthCubit(authRepository: sl()));

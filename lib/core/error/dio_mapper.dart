@@ -36,7 +36,7 @@ extension DioExceptionMapper on DioException {
         );
 
       case DioExceptionType.badResponse:
-        return _mapStatusCode(response?.statusCode);
+        return _mapStatusCode(response?.statusCode, response?.data);
 
       case DioExceptionType.badCertificate:
         return const Failure(
@@ -54,48 +54,53 @@ extension DioExceptionMapper on DioException {
   }
 }
 
-Failure _mapStatusCode(int? statusCode) {
+Failure _mapStatusCode(int? statusCode, [dynamic responseData]) {
+  // Try to extract the backend's own message first — it's already user-friendly.
+  final backendMessage = responseData is Map<String, dynamic>
+      ? responseData['message'] as String?
+      : null;
+
   switch (statusCode) {
     case 401:
-      return const Failure(
+      return Failure(
         type: FailureType.unauthorized,
-        message: 'Your session has expired. Please log in again.',
+        message: backendMessage ?? 'Your session has expired. Please log in again.',
       );
     case 403:
-      return const Failure(
+      return Failure(
         type: FailureType.forbidden,
-        message: 'You do not have permission to perform this action.',
+        message: backendMessage ?? 'You do not have permission to perform this action.',
       );
     case 404:
-      return const Failure(
+      return Failure(
         type: FailureType.notFound,
-        message: 'The requested resource was not found.',
+        message: backendMessage ?? 'The requested resource was not found.',
       );
     case 409:
-      return const Failure(
+      return Failure(
         type: FailureType.conflict,
-        message: 'A conflict occurred. Please review your request.',
+        message: backendMessage ?? 'A conflict occurred. Please review your request.',
       );
     case 422:
-      return const Failure(
+      return Failure(
         type: FailureType.validation,
-        message: 'Some fields are invalid. Please review and try again.',
+        message: backendMessage ?? 'Some fields are invalid. Please review and try again.',
       );
     case 503:
-      return const Failure(
+      return Failure(
         type: FailureType.serverDown,
-        message: 'The service is temporarily unavailable. Please try later.',
+        message: backendMessage ?? 'The service is temporarily unavailable. Please try later.',
       );
     default:
       if (statusCode != null && statusCode >= 500) {
-        return const Failure(
+        return Failure(
           type: FailureType.serverError,
-          message: 'A server error occurred. Please try again later.',
+          message: backendMessage ?? 'A server error occurred. Please try again later.',
         );
       }
-      return const Failure(
+      return Failure(
         type: FailureType.unknown,
-        message: 'An unexpected error occurred. Please try again.',
+        message: backendMessage ?? 'An unexpected error occurred. Please try again.',
       );
   }
 }

@@ -24,6 +24,7 @@ class AuthRepository implements AuthRepo {
 
   AuthRepository(this._apiService);
 
+  @override
   Future<Either<Failure, UserModel>> login({
     required String email,
     required String password,
@@ -48,6 +49,7 @@ class AuthRepository implements AuthRepo {
     }
   }
 
+  @override
   Future<Either<Failure, UserModel>> register({
     required String name,
     required String email,

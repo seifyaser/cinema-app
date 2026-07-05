@@ -3,7 +3,7 @@ import '../../data/repositories/auth_repository.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  final AuthRepository authRepository;
+  final AuthRepo authRepository;
 
   AuthCubit({required this.authRepository}) : super(AuthInitial());
 
@@ -11,7 +11,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     final result = await authRepository.login(email: email, password: password);
     result.fold(
-      (failure) => emit(AuthFailure(failure.message)),
+      (failure) => emit(AuthFailure(type: failure.type, message: failure.message)),
       (user) => emit(AuthSuccess(user)),
     );
   }
@@ -30,7 +30,7 @@ class AuthCubit extends Cubit<AuthState> {
       phone: phone,
     );
     result.fold(
-      (failure) => emit(AuthFailure(failure.message)),
+      (failure) => emit(AuthFailure(type: failure.type, message: failure.message)),
       (user) => emit(AuthSuccess(user)),
     );
   }
