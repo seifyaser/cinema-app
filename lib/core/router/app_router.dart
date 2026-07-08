@@ -29,7 +29,7 @@ abstract class AppRouter {
 
   static GoRouter router() {
     return GoRouter(
-      initialLocation: loginRoute,
+      initialLocation: homeRoute,
       routes: [
         // ================= AUTH =================
         GoRoute(

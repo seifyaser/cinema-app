@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:project/core/widgets/video_player_youtube.dart';
 import 'package:project/features/home/data/models/movie_data.dart';
 
 class MoviePosterTrailer extends StatelessWidget {
   const MoviePosterTrailer({super.key, required this.movie});
 
   final MovieData movie;
+
+  // ── TEMPORARY ──────────────────────────────────────────────────────────────
+  // Replace this with movie.trailerUrl (or however your API field is named)
+  // once the backend returns it.  The player accepts any YouTube URL format.
+  static const String _staticTrailerUrl =
+      'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+  // ───────────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -22,26 +30,9 @@ class MoviePosterTrailer extends StatelessWidget {
         Positioned(
           right: 18,
           bottom: 18,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.play_circle_fill, color: Colors.white),
-                SizedBox(width: 10),
-                Text(
-                  "Watch Trailer",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // YoutubePlayButton handles navigation + URL parsing internally.
+          // Swap _staticTrailerUrl for movie.trailerUrl when the API is ready.
+          child: YoutubePlayButton(videoUrl: _staticTrailerUrl),
         ),
       ],
     );
