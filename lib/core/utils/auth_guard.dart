@@ -10,6 +10,7 @@ import 'package:project/core/widgets/auth_dialog.dart';
 /// Centralized service to protect authenticated actions.
 class AuthGuard {
   /// Executes the [action] if the user has a valid session.
+  /// The action is a callback that will be executed if the user is authenticated.
   /// If not, prompts the user to log in and automatically executes the [action]
   /// upon a successful authentication.
   static Future<void> execute(BuildContext context, VoidCallback action) async {

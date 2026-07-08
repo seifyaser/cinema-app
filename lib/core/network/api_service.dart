@@ -33,7 +33,6 @@ class ApiService {
   late final Dio _dio;
   final TokenStorage _tokenStorage;
 
-  // TODO: Replace with your actual base URL.
   static const String baseUrl = 'http://192.168.1.4:3000/api/v1/';
 
   // ---------------------------------------------------------------------------

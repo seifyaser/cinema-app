@@ -6,7 +6,6 @@ import 'package:project/core/widgets/failure_widget.dart';
 import '../widgets/animated_movie_background.dart';
 import '../widgets/animated_top_tabs.dart';
 import '../widgets/clickedTabView.dart';
-import 'package:project/core/error/failure_type.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:project/features/home/data/models/cast_model.dart';
+
 import 'package:project/features/home/domain/entities/movie_entity.dart';
 
 class MovieCastList extends StatelessWidget {

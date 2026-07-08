@@ -36,8 +36,9 @@ class TokenStorage {
     if (token == null || token.isEmpty) {
       return false;
     }
-    
+
     try {
+      // we use jwt_decoder to check if the token is expired or not
       return !JwtDecoder.isExpired(token);
     } catch (e) {
       // If the token is malformed, treat it as invalid

@@ -5,8 +5,11 @@ import 'package:project/features/auth/data/repositories/auth_repository.dart';
 import 'package:project/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:project/features/home/data/repositories/movie_repository_impl.dart';
 import 'package:project/features/home/domain/repositories/movie_repository.dart';
-
 import 'package:project/features/home/presentation/cubit/home_cubit.dart';
+
+import 'package:project/features/booking/data/datasources/booking_remote_data_source.dart';
+import 'package:project/features/booking/data/repositories/booking_repository_impl.dart';
+import 'package:project/features/booking/presentation/cubit/booking_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -22,8 +25,19 @@ Future<void> init() async {
   sl.registerLazySingleton<MovieRepository>(
     () => MovieRepositoryImpl(apiService: sl()),
   );
+  
+  // Booking Feature
+  sl.registerLazySingleton<BookingRemoteDataSource>(
+    () => BookingRemoteDataSourceImpl(apiService: sl()),
+  );
+  sl.registerLazySingleton<BookingRepository>(
+    () => BookingRepositoryImpl(remoteDataSource: sl()),
+  );
 
   // Cubits
   sl.registerFactory<AuthCubit>(() => AuthCubit(authRepository: sl()));
   sl.registerFactory<HomeCubit>(() => HomeCubit(movieRepository: sl()));
+  sl.registerFactoryParam<BookingCubit, String, dynamic>(
+    (movieId, _) => BookingCubit(bookingRepository: sl(), movieId: movieId),
+  );
 }

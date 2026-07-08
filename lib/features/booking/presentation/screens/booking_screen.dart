@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project/core/router/app_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:project/core/widgets/failure_widget.dart';
+import 'package:project/features/booking/presentation/cubit/booking_cubit.dart';
+import 'package:project/features/booking/presentation/cubit/booking_state.dart';
 import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/widgets/animated_movie_background.dart';
 
@@ -19,13 +24,7 @@ class BookingScreen extends StatefulWidget {
 }
 
 class _BookingScreenState extends State<BookingScreen> {
-  final int _selectedDateIndex = 0;
   int _numberOfSeats = 0;
-  String _selectedTime = "7:30 PM";
-
-  final List<String> _dates = ["12 Jun", "13 Jun", "14 Jun"];
-  final List<String> _times = ["1:00 PM", "3:00 PM", "7:30 PM", "9:00 PM"];
-
   late List<List<int>> _seats;
 
   @override
@@ -140,9 +139,55 @@ class _BookingScreenState extends State<BookingScreen> {
                         children: [
                           const SizedBox(height: 24),
                           
-                          BookingDateSelector(
-                            selectedDate: _dates[_selectedDateIndex],
-                            numberOfSeats: _numberOfSeats,
+                          BlocBuilder<BookingCubit, BookingState>(
+                            builder: (context, state) {
+                              if (state is BookingLoading) {
+                                return const Center(child: CircularProgressIndicator());
+                              }
+                              if (state is BookingError) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 40.0),
+                                  child: FailureWidget(
+                                    type: state.type,
+                                    message: state.message,
+                                    onRetry: () {
+                                      context.read<BookingCubit>().fetchAvailableDates();
+                                    },
+                                  ),
+                                );
+                              }
+                              
+                              if (state is BookingLoaded) {
+                                if (state.availableDates.isEmpty) {
+                                  return const SizedBox(height: 80);
+                                }
+                                
+                                // Format dates
+                                final formattedDates = state.availableDates.map((dateStr) {
+                                  try {
+                                    final parsed = DateFormat('yyyy-MM-dd').parse(dateStr);
+                                    return DateFormat('dd MMM').format(parsed);
+                                  } catch (e) {
+                                    return dateStr;
+                                  }
+                                }).toList();
+                                
+                                final selectedIndex = state.selectedDate != null 
+                                    ? state.availableDates.indexOf(state.selectedDate!) 
+                                    : 0;
+
+                                return BookingDateSelector(
+                                  dates: formattedDates,
+                                  rawDates: state.availableDates,
+                                  selectedDateIndex: selectedIndex,
+                                  numberOfSeats: _numberOfSeats,
+                                  onDateSelected: (rawDate) {
+                                    context.read<BookingCubit>().selectDate(rawDate);
+                                  },
+                                );
+                              }
+                              return const SizedBox();
+                            },
                           ),
                           
                           const SizedBox(height: 24),
@@ -170,11 +215,32 @@ class _BookingScreenState extends State<BookingScreen> {
                             ),
                           ),
 
-                          TimeSlotSelector(
-                            times: _times,
-                            selectedTime: _selectedTime,
-                            onTimeSelected: (time) {
-                              setState(() => _selectedTime = time);
+                          BlocBuilder<BookingCubit, BookingState>(
+                            builder: (context, state) {
+                              if (state is BookingLoaded) {
+                                if (state.isLoadingShowtimes) {
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+                                
+                                final times = state.showtimes.map((s) => s.startTime).toList();
+                                
+                                if (times.isEmpty) {
+                                  return const Padding(
+                                    padding: EdgeInsets.all(20.0),
+                                    child: Text("No showtimes available", style: TextStyle(color: Colors.white)),
+                                  );
+                                }
+
+                                return TimeSlotSelector(
+                                  times: times,
+                                  selectedTime: state.selectedShowtime?.startTime ?? times.first,
+                                  onTimeSelected: (timeStr) {
+                                    final showtime = state.showtimes.firstWhere((s) => s.startTime == timeStr);
+                                    context.read<BookingCubit>().selectShowtime(showtime);
+                                  },
+                                );
+                              }
+                              return const SizedBox();
                             },
                           ),
                         ],
@@ -183,10 +249,18 @@ class _BookingScreenState extends State<BookingScreen> {
                   ),
                 ),
 
-                BookingBottomBar(
-                  price: 18.00,
-                  onBuyPressed: () {
-                    context.push(AppRouter.checkoutRoute);
+                BlocBuilder<BookingCubit, BookingState>(
+                  builder: (context, state) {
+                    double price = 0.0;
+                    if (state is BookingLoaded) {
+                      price = state.selectedShowtime?.ticketPrice ?? 0.0;
+                    }
+                    return BookingBottomBar(
+                      price: price,
+                      onBuyPressed: () {
+                        context.push(AppRouter.checkoutRoute);
+                      },
+                    );
                   },
                 ),
               ],

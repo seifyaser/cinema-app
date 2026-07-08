@@ -5,6 +5,7 @@ import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/screens/MovieScreenDetails.dart';
 import 'package:project/features/booking/presentation/screens/booking_screen.dart';
 import 'package:project/features/booking/presentation/screens/checkout_screen.dart';
+import 'package:project/features/booking/presentation/cubit/booking_cubit.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -54,8 +55,13 @@ abstract class AppRouter {
         ),
         GoRoute(
           path: bookingRoute,
-          builder: (context, state) =>
-              BookingScreen(movie: state.extra as MovieEntity),
+          builder: (context, state) {
+            final movie = state.extra as MovieEntity;
+            return BlocProvider(
+              create: (context) => di.sl<BookingCubit>(param1: movie.id)..fetchAvailableDates(),
+              child: BookingScreen(movie: movie),
+            );
+          },
         ),
         GoRoute(
           path: checkoutRoute,
