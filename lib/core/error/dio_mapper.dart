@@ -57,19 +57,28 @@ extension DioExceptionMapper on DioException {
 Failure _mapStatusCode(int? statusCode, [dynamic responseData]) {
   // Try to extract the backend's own message first — it's already user-friendly.
   final backendMessage = responseData is Map<String, dynamic>
-      ? responseData['message'] as String?
+      ? ((responseData['errors'] is List &&
+                    (responseData['errors'] as List).isNotEmpty)
+                ? ((responseData['errors'] as List).first
+                          as Map<String, dynamic>)['message']
+                      as String?
+                : null) ??
+            responseData['message'] as String?
       : null;
 
   switch (statusCode) {
     case 401:
       return Failure(
         type: FailureType.unauthorized,
-        message: backendMessage ?? 'Your session has expired. Please log in again.',
+        message:
+            backendMessage ?? 'Your session has expired. Please log in again.',
       );
     case 403:
       return Failure(
         type: FailureType.forbidden,
-        message: backendMessage ?? 'You do not have permission to perform this action.',
+        message:
+            backendMessage ??
+            'You do not have permission to perform this action.',
       );
     case 404:
       return Failure(
@@ -79,28 +88,37 @@ Failure _mapStatusCode(int? statusCode, [dynamic responseData]) {
     case 409:
       return Failure(
         type: FailureType.conflict,
-        message: backendMessage ?? 'A conflict occurred. Please review your request.',
+        message:
+            backendMessage ??
+            'A conflict occurred. Please review your request.',
       );
     case 422:
       return Failure(
         type: FailureType.validation,
-        message: backendMessage ?? 'Some fields are invalid. Please review and try again.',
+        message:
+            backendMessage ??
+            'Some fields are invalid. Please review and try again.',
       );
     case 503:
       return Failure(
         type: FailureType.serverDown,
-        message: backendMessage ?? 'The service is temporarily unavailable. Please try later.',
+        message:
+            backendMessage ??
+            'The service is temporarily unavailable. Please try later.',
       );
     default:
       if (statusCode != null && statusCode >= 500) {
         return Failure(
           type: FailureType.serverError,
-          message: backendMessage ?? 'A server error occurred. Please try again later.',
+          message:
+              backendMessage ??
+              'A server error occurred. Please try again later.',
         );
       }
       return Failure(
         type: FailureType.unknown,
-        message: backendMessage ?? 'An unexpected error occurred. Please try again.',
+        message:
+            backendMessage ?? 'An unexpected error occurred. Please try again.',
       );
   }
 }

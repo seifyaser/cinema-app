@@ -34,7 +34,7 @@ class ApiService {
   final TokenStorage _tokenStorage;
 
   // TODO: Replace with your actual base URL.
-  static const String baseUrl = 'http://localhost:3000/api/v1/';
+  static const String baseUrl = 'http://192.168.1.4:3000/api/v1/';
 
   // ---------------------------------------------------------------------------
   // Public HTTP methods
@@ -126,6 +126,7 @@ class _AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     final token = await _tokenStorage.getToken();
+    // debugPrint('Saved Token: $token');
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }

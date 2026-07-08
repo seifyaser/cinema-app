@@ -4,6 +4,7 @@ import '../../../../core/network/api_service.dart';
 import '../../../../core/error/dio_mapper.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/failure_type.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRepo {
@@ -21,8 +22,9 @@ abstract class AuthRepo {
 
 class AuthRepository implements AuthRepo {
   final ApiService _apiService;
+  final TokenStorage _tokenStorage;
 
-  AuthRepository(this._apiService);
+  AuthRepository(this._apiService, this._tokenStorage);
 
   @override
   Future<Either<Failure, UserModel>> login({
@@ -36,7 +38,12 @@ class AuthRepository implements AuthRepo {
       );
 
       final data = response.data['data'];
-      return Right(UserModel.fromJson(data as Map<String, dynamic>));
+      final userJson = data['user'];
+      final token = response.data['data']['token'];
+      if (token != null) {
+        await _tokenStorage.saveToken(token as String);
+      }
+      return Right(UserModel.fromJson(userJson as Map<String, dynamic>));
     } on DioException catch (e) {
       return Left(e.toFailure());
     } catch (e) {
@@ -68,7 +75,12 @@ class AuthRepository implements AuthRepo {
       );
 
       final data = response.data['data'];
-      return Right(UserModel.fromJson(data as Map<String, dynamic>));
+      final userJson = data['user'];
+      final token = response.data['data']['token'];
+      if (token != null) {
+        await _tokenStorage.saveToken(token as String);
+      }
+      return Right(UserModel.fromJson(userJson as Map<String, dynamic>));
     } on DioException catch (e) {
       return Left(e.toFailure());
     } catch (e) {
