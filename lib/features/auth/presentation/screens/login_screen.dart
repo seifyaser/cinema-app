@@ -2,6 +2,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project/core/router/app_router.dart';
+import 'package:project/core/utils/auth_flow_arguments.dart';
+import 'package:project/core/utils/auth_result.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
@@ -37,7 +39,14 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthSuccess) {
-          context.go(AppRouter.homeRoute);
+          final extra = GoRouterState.of(context).extra;
+          final isGuarded = extra is AuthFlowArguments ? extra.isGuarded : false;
+
+          if (isGuarded) {
+            context.pop(AuthResult.authenticated);
+          } else {
+            context.go(AppRouter.homeRoute);
+          }
         } else if (state is AuthFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message)),
@@ -204,7 +213,8 @@ class _LoginScreenState extends State<LoginScreen> {
           Center(
             child: GestureDetector(
               onTap: () {
-                context.go(AppRouter.registerRoute);
+                final extra = GoRouterState.of(context).extra;
+                context.push(AppRouter.registerRoute, extra: extra);
               },
               child: RichText(
                 text: TextSpan(

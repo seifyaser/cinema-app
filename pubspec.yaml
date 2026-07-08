@@ -49,6 +49,7 @@ dependencies:
   flutter_secure_storage: ^10.3.1
   inline_youtube_player:
     path: packages/inline_youtube_player
+  jwt_decoder: ^2.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

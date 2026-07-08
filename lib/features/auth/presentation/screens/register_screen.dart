@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../widgets/auth_background.dart';
-import '../widgets/custom_text_field.dart';
+import 'package:project/features/auth/presentation/widgets/custom_text_field.dart';
+
+import 'package:project/core/utils/auth_result.dart';
+import 'package:project/core/utils/auth_flow_arguments.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../widgets/auth_phone_field.dart';
 
@@ -43,7 +46,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthSuccess) {
-          context.go(AppRouter.homeRoute);
+          final extra = GoRouterState.of(context).extra;
+          final isGuarded = extra is AuthFlowArguments ? extra.isGuarded : false;
+
+          if (isGuarded) {
+            context.pop(AuthResult.authenticated);
+          } else {
+            context.go(AppRouter.homeRoute);
+          }
         } else if (state is AuthFailure) {
           ScaffoldMessenger.of(
             context,
@@ -230,7 +240,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Center(
                 child: GestureDetector(
                   onTap: () {
-                    context.go(AppRouter.loginRoute);
+                    final extra = GoRouterState.of(context).extra;
+                    // Usually we use context.pop() because we came from LoginScreen.
+                    // But if somehow they got here directly, we can push/replace.
+                    // A pop works best if they navigated Login -> Register.
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.pushReplacement(AppRouter.loginRoute, extra: extra);
+                    }
                   },
                   child: RichText(
                     text: TextSpan(

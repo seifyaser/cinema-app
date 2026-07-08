@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 /// Manages secure persistence of the auth token.
 ///
@@ -27,5 +28,20 @@ class TokenStorage {
   Future<bool> hasToken() async {
     final token = await _storage.read(key: _tokenKey);
     return token != null && token.isNotEmpty;
+  }
+
+  /// Returns true if the token exists and has not expired.
+  Future<bool> hasValidToken() async {
+    final token = await _storage.read(key: _tokenKey);
+    if (token == null || token.isEmpty) {
+      return false;
+    }
+    
+    try {
+      return !JwtDecoder.isExpired(token);
+    } catch (e) {
+      // If the token is malformed, treat it as invalid
+      return false;
+    }
   }
 }
