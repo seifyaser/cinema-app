@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../data/models/movie_data.dart';
+import '../../domain/entities/movie_entity.dart';
 
 class MovieCard extends StatelessWidget {
   const MovieCard({required this.movie, super.key});
 
-  final MovieData movie;
+  final MovieEntity movie;
 
   static const _padding = EdgeInsets.only(top: 22, left: 20);
   static const _gap = SizedBox(height: 8);
@@ -42,7 +42,8 @@ class MovieCard extends StatelessWidget {
         ),
         image: DecorationImage(
           image: NetworkImage(movie.imageurl),
-          fit: BoxFit.cover,
+          fit: BoxFit.fitHeight,
+          filterQuality: FilterQuality.high,
         ),
       ),
       child: Align(
@@ -52,11 +53,7 @@ class MovieCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTag(movie.duration),
-              _gap,
-              _buildTag(movie.type),
-            ],
+            children: [_buildTag(movie.duration), _gap, _buildTag(movie.type)],
           ),
         ),
       ),
@@ -64,9 +61,6 @@ class MovieCard extends StatelessWidget {
   }
 
   Widget _buildTag(String text) {
-    // 6. Solid Background Optimization
-    // By removing BackdropFilter entirely, we save the GPU from running convolution shaders.
-    // The sleek semi-transparent black looks premium while rendering instantaneously!
     return DecoratedBox(
       decoration: BoxDecoration(
         color: _tagBgColor,

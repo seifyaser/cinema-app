@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:project/core/router/app_router.dart';
-import 'package:project/features/home/data/models/movie_data.dart';
-import 'package:project/core/storage/token_storage.dart';
-import 'package:project/core/di/dependency_injection.dart' as di;
-import 'package:project/core/widgets/auth_dialog.dart';
+import 'package:project/features/home/domain/entities/movie_entity.dart';
+import 'package:project/core/utils/auth_guard.dart';
 
 class BookNowButton extends StatelessWidget {
-  final MovieData movie;
+  final MovieEntity movie;
   const BookNowButton({super.key, required this.movie});
 
   @override
@@ -38,17 +36,10 @@ class BookNowButton extends StatelessWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(40),
-                    onTap: () async {
-                      final hasToken = await di.sl<TokenStorage>().hasToken();
-                      if (hasToken) {
-                        if (context.mounted) {
-                          context.push(AppRouter.bookingRoute, extra: movie);
-                        }
-                      } else {
-                        if (context.mounted) {
-                          showAuthDialog(context);
-                        }
-                      }
+                    onTap: () {
+                      AuthGuard.execute(context, () {
+                        context.push(AppRouter.bookingRoute, extra: movie);
+                      });
                     },
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,

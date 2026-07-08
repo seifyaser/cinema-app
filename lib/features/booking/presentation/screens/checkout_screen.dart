@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project/features/booking/presentation/widgets/liquid_glass_alert.dart';
-import 'package:project/features/home/data/models/movie_data.dart';
+import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/widgets/liquid_glass_back_button.dart';
 import 'package:project/features/home/presentation/widgets/movie_details_background.dart';
 
@@ -113,14 +113,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Container(color: const Color.fromARGB(255, 0, 0, 0)),
 
           MovieDetailsBackground(
-            movie: MovieData(
-              _mockData['movie']['title'],
-              'Unknown',
-              2026,
-              [0xFF000000, 0xFF000000],
+            movie: MovieEntity(
+              id: '1',
+              title: _mockData['movie']['title'],
+              director: 'Unknown',
+              year: 2026,
+              gradientColors: [0xFF000000, 0xFF000000],
               duration: '120m',
-              type: 'Unknown',
-              imageurl: _mockData['movie']['poster'],
+              type: 'Action',
+              imageurl: _mockData['movie']['imageurl'],
+              trailerUrl: '',
+              description: '',
+              actors: [],
             ),
           ),
 

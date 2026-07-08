@@ -1,11 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:project/features/home/data/models/movie_data.dart';
+import 'package:project/features/home/domain/entities/movie_entity.dart';
 
 class MovieDetailsBackground extends StatelessWidget {
   const MovieDetailsBackground({super.key, required this.movie});
 
-  final MovieData movie;
+  final MovieEntity movie;
 
   @override
   Widget build(BuildContext context) {
@@ -32,3 +32,4 @@ class MovieDetailsBackground extends StatelessWidget {
     );
   }
 }
+

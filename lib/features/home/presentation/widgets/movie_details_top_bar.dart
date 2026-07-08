@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:project/features/home/data/models/movie_data.dart';
+import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/widgets/movieTag.dart';
 import 'package:project/features/home/presentation/widgets/liquid_glass_back_button.dart';
 
 class MovieDetailsTopBar extends StatelessWidget {
   const MovieDetailsTopBar({super.key, required this.movie});
 
-  final MovieData movie;
+  final MovieEntity movie;
 
   @override
   Widget build(BuildContext context) {
@@ -34,3 +34,4 @@ class MovieDetailsTopBar extends StatelessWidget {
     );
   }
 }
+

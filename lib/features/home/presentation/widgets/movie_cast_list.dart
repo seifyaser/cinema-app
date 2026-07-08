@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:project/features/home/data/models/cast_model.dart';
+import 'package:project/features/home/domain/entities/movie_entity.dart';
 
 class MovieCastList extends StatelessWidget {
-  const MovieCastList({super.key});
-
+  const MovieCastList({super.key, required this.movie});
+  final MovieEntity movie;
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -11,10 +12,10 @@ class MovieCastList extends StatelessWidget {
       child: RepaintBoundary(
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          itemCount: mockCast.length,
+          itemCount: movie.actors.length,
           separatorBuilder: (_, _) => const SizedBox(width: 16),
           itemBuilder: (_, index) {
-            final actor = mockCast[index];
+            final actor = movie.actors[index];
 
             return SizedBox(
               width: 140,
@@ -25,7 +26,7 @@ class MovieCastList extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: const BorderRadius.all(Radius.circular(24)),
                       child: Image.network(
-                        actor.image,
+                        actor.imageUrl,
                         width: double.infinity,
                         fit: BoxFit.cover,
                       ),
@@ -39,11 +40,13 @@ class MovieCastList extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          actor.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                        FittedBox(
+                          child: Text(
+                            actor.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 4),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:project/features/home/data/models/movie_data.dart';
+import 'package:project/features/home/domain/entities/movie_entity.dart';
+import 'package:project/features/home/presentation/widgets/Expandable_description.dart';
 import 'package:project/features/home/presentation/widgets/movie_details_background.dart';
 import 'package:project/features/home/presentation/widgets/movie_details_top_bar.dart';
 import 'package:project/features/home/presentation/widgets/movie_poster_trailer.dart';
@@ -8,7 +9,7 @@ import 'package:project/features/home/presentation/widgets/book_now_button.dart'
 
 class MovieDetailsScreen extends StatelessWidget {
   const MovieDetailsScreen({super.key, required this.movie});
-  final MovieData movie;
+  final MovieEntity movie;
 
   @override
   Widget build(BuildContext context) {
@@ -35,23 +36,7 @@ class MovieDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  Text(
-                    "Dubbed 'the greatest that never was,' Sonny Hayes was Formula One's most promising driver until an accident nearly ended his career. Thirty years later he returns to the world of racing.",
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.65),
-                      fontSize: 16,
-                      height: 1.7,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Read More",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 17,
-                    ),
-                  ),
+                  ExpandableDescription(description: movie.description),
                   const SizedBox(height: 35),
                   const Text(
                     "Cast",
@@ -62,7 +47,7 @@ class MovieDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  const MovieCastList(),
+                  MovieCastList(movie: movie),
                 ],
               ),
             ),

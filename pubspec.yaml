@@ -50,6 +50,7 @@ dependencies:
   inline_youtube_player:
     path: packages/inline_youtube_player
   jwt_decoder: ^2.0.1
+  equatable: ^2.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -276,8 +276,9 @@ class _CinemaDeckState extends State<CinemaDeck>
   }
 
   List<int> _createSnapshot() {
+    final count = widget.itemCount <= 1 ? widget.itemCount : _snapshotCount;
     return List<int>.generate(
-      _snapshotCount,
+      count,
       (depth) => _currentLogicalIndex + depth,
       growable: false,
     );
@@ -295,7 +296,7 @@ class _CinemaDeckState extends State<CinemaDeck>
   }
 
   void _handleDragStart(DragStartDetails details) {
-    if (_isAnimating || widget.itemCount == 0) return;
+    if (_isAnimating || widget.itemCount <= 1) return;
 
     _controller.stop();
     _controller.value = 0.0;
@@ -308,7 +309,7 @@ class _CinemaDeckState extends State<CinemaDeck>
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
-    if (!_isDragging || _isAnimating) return;
+    if (!_isDragging || _isAnimating || widget.itemCount <= 1) return;
 
     // Directly updating the ValueNotifier avoids a full widget tree rebuild
     // via setState, keeping the animation ultra-smooth.
@@ -317,7 +318,7 @@ class _CinemaDeckState extends State<CinemaDeck>
   }
 
   void _handleDragEnd(DragEndDetails details) {
-    if (!_isDragging || _isAnimating) return;
+    if (!_isDragging || _isAnimating || widget.itemCount <= 1) return;
 
     final velocity = details.primaryVelocity ?? 0.0;
     final dragFraction = (_dragPixels.value / math.max(_cardHeight, 1.0)).abs();

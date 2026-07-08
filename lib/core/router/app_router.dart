@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:project/features/home/data/models/movie_data.dart';
+import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/screens/MovieScreenDetails.dart';
 import 'package:project/features/booking/presentation/screens/booking_screen.dart';
 import 'package:project/features/booking/presentation/screens/checkout_screen.dart';
@@ -10,6 +10,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../shared/main_layout.dart';
 import '../di/dependency_injection.dart' as di;
 
@@ -49,12 +50,12 @@ abstract class AppRouter {
         GoRoute(
           path: movieDetailsRoute,
           builder: (context, state) =>
-              MovieDetailsScreen(movie: state.extra as MovieData),
+              MovieDetailsScreen(movie: state.extra as MovieEntity),
         ),
         GoRoute(
           path: bookingRoute,
           builder: (context, state) =>
-              BookingScreen(movie: state.extra as MovieData),
+              BookingScreen(movie: state.extra as MovieEntity),
         ),
         GoRoute(
           path: checkoutRoute,
@@ -72,7 +73,10 @@ abstract class AppRouter {
               routes: [
                 GoRoute(
                   path: homeRoute,
-                  builder: (context, state) => const HomeScreen(),
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => di.sl<HomeCubit>()..fetchMovies(),
+                    child: const HomeScreen(),
+                  ),
                 ),
               ],
             ),
@@ -118,3 +122,4 @@ abstract class AppRouter {
     );
   }
 }
+

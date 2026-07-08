@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project/core/router/app_router.dart';
-import 'package:project/features/home/data/models/movie_data.dart';
+import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/widgets/animated_movie_background.dart';
 
 import '../widgets/booking_bottom_bar.dart';
@@ -11,7 +11,7 @@ import '../widgets/seat_grid.dart';
 import '../widgets/time_slot_selector.dart';
 
 class BookingScreen extends StatefulWidget {
-  final MovieData movie;
+  final MovieEntity movie;
   const BookingScreen({super.key, required this.movie});
 
   @override
@@ -197,3 +197,4 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 }
+

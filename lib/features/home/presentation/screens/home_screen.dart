@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../data/models/movie_data.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubit/home_cubit.dart';
+import '../cubit/home_state.dart';
+import 'package:project/core/widgets/failure_widget.dart';
 import '../widgets/animated_movie_background.dart';
 import '../widgets/animated_top_tabs.dart';
-import '../widgets/now_playing_view.dart';
+import '../widgets/clickedTabView.dart';
+import 'package:project/core/error/failure_type.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,8 +17,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late TabController _tabController;
-  // ValueNotifier avoids rebuilding the whole screen during tab swipe.
-  // Only the corner-radius Container subscribes via ValueListenableBuilder.
   final ValueNotifier<int> _selectedIndexNotifier = ValueNotifier(1);
   int _cinemaIndex = 0;
 
@@ -57,92 +58,121 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Container(color: colorScheme.surface),
+      body: BlocBuilder<HomeCubit, HomeState>(
+        builder: (context, state) {
+          if (state is HomeLoading || state is HomeInitial) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-          AnimatedMovieBackground(
-            imageUrl: MovieData.mockMovies[_cinemaIndex].imageurl,
-            animationKey: _cinemaIndex,
-          ),
+          if (state is HomeError) {
+            return FailureWidget(
+              type: state.type,
+              message: state.message,
+              onRetry: () => context.read<HomeCubit>().fetchMovies(),
+            );
+          }
 
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 20.0),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // ValueListenableBuilder rebuilds ONLY this Container on tab
-                  // swipe — AnimatedMovieBackground is fully unaffected.
-                  ValueListenableBuilder<int>(
-                    valueListenable: _selectedIndexNotifier,
-                    builder: (context, selectedIndex, child) {
-                      return Positioned(
-                        top: containerTopOffset,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.only(
-                              topLeft: selectedIndex == 1
-                                  ? const Radius.circular(40)
-                                  : Radius.zero,
-                              topRight: selectedIndex == 0
-                                  ? const Radius.circular(40)
-                                  : Radius.zero,
+          if (state is HomeLoaded) {
+            return ValueListenableBuilder<int>(
+              valueListenable: _selectedIndexNotifier,
+              builder: (context, selectedIndex, _) {
+                final movies = selectedIndex == 1
+                    ? state.nowPlayingMovies
+                    : state.comingSoonMovies;
+
+                if (movies.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No movies available.',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
+                }
+
+                // Ensure _cinemaIndex is within bounds when switching tabs
+                if (_cinemaIndex >= movies.length) {
+                  _cinemaIndex = 0;
+                }
+
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(color: colorScheme.surface),
+                    AnimatedMovieBackground(
+                      imageUrl: movies[_cinemaIndex].imageurl,
+                      animationKey: _cinemaIndex,
+                    ),
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 20.0),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned(
+                              top: containerTopOffset,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: selectedIndex == 1
+                                        ? const Radius.circular(40)
+                                        : Radius.zero,
+                                    topRight: selectedIndex == 0
+                                        ? const Radius.circular(40)
+                                        : Radius.zero,
+                                  ),
+                                ),
+                                child: TabBarView(
+                                  controller: _tabController,
+                                  children: [
+                                    ClickedTabView(
+                                      movies: state.comingSoonMovies,
+                                      showDate: false,
+                                      onIndexChanged: (index) {
+                                        if (selectedIndex == 0) {
+                                          setState(() => _cinemaIndex = index);
+                                        }
+                                      },
+                                    ),
+                                    ClickedTabView(
+                                      movies: state.nowPlayingMovies,
+                                      showDate: true,
+                                      onIndexChanged: (index) {
+                                        if (selectedIndex == 1) {
+                                          setState(() => _cinemaIndex = index);
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                          child: child,
+                            Positioned(
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              child: AnimatedTopTabs(
+                                tabs: _tabs,
+                                controller: _tabController,
+                                tabWidth: tabWidth,
+                                tabHeight: tabHeight,
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildPlaceholderContent("Coming Soon"),
-                        NowPlayingView(
-                          onIndexChanged: (index) {
-                            setState(() => _cinemaIndex = index);
-                          },
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
+                );
+              },
+            );
+          }
 
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: AnimatedTopTabs(
-                      tabs: _tabs,
-                      controller: _tabController,
-                      tabWidth: tabWidth,
-                      tabHeight: tabHeight,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlaceholderContent(String text) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Center(
-      child: Text(
-        text,
-        style: TextStyle(
-          color: colorScheme.onSurface,
-          fontFamily: GoogleFonts.sora().fontFamily,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-        ),
+          return const SizedBox.shrink();
+        },
       ),
     );
   }
