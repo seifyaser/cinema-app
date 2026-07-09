@@ -17,7 +17,7 @@ class AnimatedMovieBackground extends StatelessWidget {
       top: 0,
       left: 0,
       right: 0,
-      height: MediaQuery.of(context).size.height * 0.55,
+      height: MediaQuery.of(context).size.height * 0.5,
       child: RepaintBoundary(
         child: Stack(
           fit: StackFit.expand,

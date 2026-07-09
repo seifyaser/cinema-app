@@ -14,8 +14,9 @@ class TimeSlotSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(left: 20, bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -10,66 +10,14 @@ import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/widgets/animated_movie_background.dart';
 
 import '../widgets/booking_bottom_bar.dart';
-import '../widgets/booking_date_selector.dart';
+import '../widgets/booking_date_seats_hall_selector.dart';
 import '../widgets/screen_curve.dart';
 import '../widgets/seat_grid.dart';
 import '../widgets/time_slot_selector.dart';
 
-class BookingScreen extends StatefulWidget {
+class BookingScreen extends StatelessWidget {
   final MovieEntity movie;
   const BookingScreen({super.key, required this.movie});
-
-  @override
-  State<BookingScreen> createState() => _BookingScreenState();
-}
-
-class _BookingScreenState extends State<BookingScreen> {
-  int _numberOfSeats = 0;
-  late List<List<int>> _seats;
-
-  @override
-  void initState() {
-    super.initState();
-    // 0 = Available, 1 = Selected, 2 = Occupied, -1 = Aisle
-    _seats = [
-      [2, 2, 0, 0, 0, 0, 2, 2],
-      [2, 2, 0, 0, -1, 0, 0, 2, 2, 2],
-      [0, 0, 0, 2, 2, -1, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, -1, 2, 2, 2, 0, 0],
-      [0, 0, 0, 0, 0, -1, 0, 0, 2, 0, 0],
-      [0, 0, 2, 2, 0, -1, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, -1, 0, 2, 2, 2, 0],
-    ];
-  }
-
-  void _handleSeatTap(int rowIndex, int colIndex) {
-    final state = _seats[rowIndex][colIndex];
-    if (state == -1 || state == 2) return; // Aisle or occupied
-
-    final bool isSelected = state == 1;
-
-    if (!isSelected && _numberOfSeats >= 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You can only select up to 10 seats.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _seats[rowIndex][colIndex] = isSelected ? 0 : 1;
-      // Recount inline — no nested setState call
-      int count = 0;
-      for (final row in _seats) {
-        for (final s in row) {
-          if (s == 1) count++;
-        }
-      }
-      _numberOfSeats = count;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,8 +29,8 @@ class _BookingScreenState extends State<BookingScreen> {
           Container(color: const Color.fromARGB(255, 0, 0, 0)),
 
           AnimatedMovieBackground(
-            imageUrl: widget.movie.imageurl,
-            animationKey: widget.movie.hashCode,
+            imageUrl: movie.imageurl,
+            animationKey: movie.hashCode,
           ),
 
           SafeArea(
@@ -92,7 +40,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 const SizedBox(height: 16),
                 // Title
                 Text(
-                  widget.movie.title.toUpperCase(),
+                  movie.title.toUpperCase(),
                   style: const TextStyle(
                     fontFamily: 'Sora',
                     fontSize: 20,
@@ -138,11 +86,35 @@ class _BookingScreenState extends State<BookingScreen> {
                       child: Column(
                         children: [
                           const SizedBox(height: 24),
-                          
-                          BlocBuilder<BookingCubit, BookingState>(
+
+                          // Top Controls (Date, Seats, Hall)
+                          BlocSelector<
+                            BookingCubit,
+                            BookingState,
+                            BookingState
+                          >(
+                            selector: (state) {
+                              if (state is BookingLoaded) {
+                                return BookingLoaded(
+                                  availableDates: state.availableDates,
+                                  selectedDate: state.selectedDate,
+                                  availableHalls: state.availableHalls,
+                                  selectedHall: state.selectedHall,
+                                  isLoadingHalls: state.isLoadingHalls,
+                                  selectedSeatsCount: state.selectedSeatsCount,
+                                  showtimes: const [],
+                                  selectedShowtime: null,
+                                  isLoadingShowtimes: false,
+                                  seats: const [],
+                                );
+                              }
+                              return state;
+                            },
                             builder: (context, state) {
                               if (state is BookingLoading) {
-                                return const Center(child: CircularProgressIndicator());
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
                               }
                               if (state is BookingError) {
                                 return Padding(
@@ -151,92 +123,202 @@ class _BookingScreenState extends State<BookingScreen> {
                                     type: state.type,
                                     message: state.message,
                                     onRetry: () {
-                                      context.read<BookingCubit>().fetchAvailableDates();
+                                      context
+                                          .read<BookingCubit>()
+                                          .fetchAvailableDates();
                                     },
                                   ),
                                 );
                               }
-                              
+
                               if (state is BookingLoaded) {
                                 if (state.availableDates.isEmpty) {
                                   return const SizedBox(height: 80);
                                 }
-                                
+
                                 // Format dates
-                                final formattedDates = state.availableDates.map((dateStr) {
-                                  try {
-                                    final parsed = DateFormat('yyyy-MM-dd').parse(dateStr);
-                                    return DateFormat('dd MMM').format(parsed);
-                                  } catch (e) {
-                                    return dateStr;
-                                  }
-                                }).toList();
-                                
-                                final selectedIndex = state.selectedDate != null 
-                                    ? state.availableDates.indexOf(state.selectedDate!) 
+                                final formattedDates = state.availableDates.map(
+                                  (dateStr) {
+                                    try {
+                                      final parsed = DateFormat(
+                                        'yyyy-MM-dd',
+                                      ).parse(dateStr);
+                                      return DateFormat(
+                                        'dd MMM',
+                                      ).format(parsed);
+                                    } catch (e) {
+                                      return dateStr;
+                                    }
+                                  },
+                                ).toList();
+
+                                final selectedIndex = state.selectedDate != null
+                                    ? state.availableDates.indexOf(
+                                        state.selectedDate!,
+                                      )
                                     : 0;
 
-                                return BookingDateSelector(
+                                return BookingDateHallSelector(
                                   dates: formattedDates,
                                   rawDates: state.availableDates,
                                   selectedDateIndex: selectedIndex,
-                                  numberOfSeats: _numberOfSeats,
+                                  numberOfSeats: state.selectedSeatsCount,
+                                  halls: state.isLoadingHalls
+                                      ? []
+                                      : state.availableHalls,
+                                  selectedHall: state.selectedHall,
                                   onDateSelected: (rawDate) {
-                                    context.read<BookingCubit>().selectDate(rawDate);
+                                    context.read<BookingCubit>().selectDate(
+                                      rawDate,
+                                    );
+                                  },
+                                  onHallSelected: (hall) {
+                                    context.read<BookingCubit>().selectHall(
+                                      hall,
+                                    );
                                   },
                                 );
                               }
                               return const SizedBox();
                             },
                           ),
-                          
+
                           const SizedBox(height: 24),
 
-                          // Screen Image & Seats
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 20,
-                              ),
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Column(
-                                  children: [
-                                    ScreenCurve(imageUrl: widget.movie.imageurl),
-                                    const SizedBox(height: 40),
-                                    SeatGrid(
-                                      seats: _seats,
-                                      onSeatTap: _handleSeatTap,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                          // Seat Grid section
+                          BlocSelector<
+                            BookingCubit,
+                            BookingState,
+                            BookingState
+                          >(
+                            selector: (state) {
+                              if (state is BookingLoaded) {
+                                return BookingLoaded(
+                                  seats: state.seats,
+                                  selectedHall: state.selectedHall,
+                                  availableDates: const [],
+                                  selectedDate: null,
+                                  availableHalls: const [],
+                                  isLoadingHalls: false,
+                                  selectedSeatsCount: 0,
+                                  showtimes: const [],
+                                  selectedShowtime: null,
+                                  isLoadingShowtimes: false,
+                                  isLoadingSeats: state.isLoadingSeats,
+                                );
+                              }
+                              return state;
+                            },
+                            builder: (context, state) {
+                              if (state is BookingLoaded) {
+                                return Expanded(
+                                  child: Column(
+                                    children: [
+                                      // Screen Image & Seats
+                                      if (state.selectedHall != null)
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 10,
+                                            ),
+                                            child: FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Column(
+                                                children: [
+                                                  ScreenCurve(
+                                                    imageUrl: movie.imageurl,
+                                                  ),
+                                                  const SizedBox(height: 40),
+                                                  if (state.isLoadingSeats)
+                                                    const SizedBox(
+                                                      height: 200,
+                                                      child: Center(
+                                                        child: CircularProgressIndicator(),
+                                                      ),
+                                                    )
+                                                  else
+                                                    SeatGrid(
+                                                      seats: state.seats,
+                                                      onSeatTap: (row, col) =>
+                                                          context
+                                                              .read<
+                                                                BookingCubit
+                                                              >()
+                                                              .toggleSeat(
+                                                                row,
+                                                                col,
+                                                              ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      else
+                                        const Expanded(child: SizedBox()),
+                                    ],
+                                  ),
+                                );
+                              }
+                              return const Expanded(child: SizedBox());
+                            },
                           ),
 
-                          BlocBuilder<BookingCubit, BookingState>(
+                          // Time Slot section
+                          BlocSelector<
+                            BookingCubit,
+                            BookingState,
+                            BookingState
+                          >(
+                            selector: (state) {
+                              if (state is BookingLoaded) {
+                                return BookingLoaded(
+                                  showtimes: state.showtimes,
+                                  selectedShowtime: state.selectedShowtime,
+                                  isLoadingShowtimes: state.isLoadingShowtimes,
+                                  availableDates: const [],
+                                  selectedDate: null,
+                                  availableHalls: const [],
+                                  selectedHall: null,
+                                  isLoadingHalls: false,
+                                  seats: const [],
+                                  selectedSeatsCount: 0,
+                                );
+                              }
+                              return state;
+                            },
                             builder: (context, state) {
                               if (state is BookingLoaded) {
                                 if (state.isLoadingShowtimes) {
-                                  return const Center(child: CircularProgressIndicator());
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
                                 }
-                                
-                                final times = state.showtimes.map((s) => s.startTime).toList();
-                                
+
+                                final times = state.showtimes
+                                    .map((s) => s.startTime)
+                                    .toList();
+
                                 if (times.isEmpty) {
                                   return const Padding(
                                     padding: EdgeInsets.all(20.0),
-                                    child: Text("No showtimes available", style: TextStyle(color: Colors.white)),
+                                    child: Text(
+                                      "No showtimes available",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                   );
                                 }
 
                                 return TimeSlotSelector(
                                   times: times,
-                                  selectedTime: state.selectedShowtime?.startTime ?? times.first,
+                                  selectedTime:
+                                      state.selectedShowtime?.startTime ??
+                                      times.first,
                                   onTimeSelected: (timeStr) {
-                                    final showtime = state.showtimes.firstWhere((s) => s.startTime == timeStr);
-                                    context.read<BookingCubit>().selectShowtime(showtime);
+                                    context
+                                        .read<BookingCubit>()
+                                        .selectShowtimeByTime(timeStr);
                                   },
                                 );
                               }
@@ -249,12 +331,17 @@ class _BookingScreenState extends State<BookingScreen> {
                   ),
                 ),
 
-                BlocBuilder<BookingCubit, BookingState>(
-                  builder: (context, state) {
-                    double price = 0.0;
+                // Bottom bar
+                BlocSelector<BookingCubit, BookingState, double>(
+                  selector: (state) {
                     if (state is BookingLoaded) {
-                      price = state.selectedShowtime?.ticketPrice ?? 0.0;
+                      final basePrice = state.selectedShowtime?.ticketPrice ?? 0.0;
+                      final count = state.selectedSeatsCount;
+                      return count > 0 ? basePrice * count : basePrice;
                     }
+                    return 0.0;
+                  },
+                  builder: (context, price) {
                     return BookingBottomBar(
                       price: price,
                       onBuyPressed: () {
@@ -271,4 +358,3 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 }
-

@@ -4,7 +4,7 @@ import '../../domain/entities/showtime_entity.dart';
 class ShowtimeModel {
   final String id;
   final String movie;
-  final HallModel hall;
+  final ShowtimeHallModel hall;
   final String date;
   final String startTime;
   final String endTime;
@@ -26,7 +26,7 @@ class ShowtimeModel {
     return ShowtimeModel(
       id: json['_id'] as String,
       movie: json['movie'] as String,
-      hall: HallModel.fromJson(json['hall'] as Map<String, dynamic>),
+      hall: ShowtimeHallModel.fromJson(json['hall'] as Map<String, dynamic>),
       date: json['date'] as String,
       startTime: json['startTime'] as String,
       endTime: json['endTime'] as String,
@@ -36,7 +36,7 @@ class ShowtimeModel {
   }
 }
 
-class HallModel {
+class ShowtimeHallModel {
   final String id;
   final String name;
   final String screenType;
@@ -44,7 +44,7 @@ class HallModel {
   final int totalColumns;
   final int totalSeats;
 
-  HallModel({
+  ShowtimeHallModel({
     required this.id,
     required this.name,
     required this.screenType,
@@ -53,8 +53,8 @@ class HallModel {
     required this.totalSeats,
   });
 
-  factory HallModel.fromJson(Map<String, dynamic> json) {
-    return HallModel(
+  factory ShowtimeHallModel.fromJson(Map<String, dynamic> json) {
+    return ShowtimeHallModel(
       id: json['_id'] as String,
       name: json['name'] as String,
       screenType: json['screenType'] as String,
