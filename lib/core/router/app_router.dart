@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/screens/MovieScreenDetails.dart';
+import 'package:project/features/booking/data/models/checkout_data_model.dart';
+import 'package:project/features/tickets/presentation/screens/tickets_screen.dart';
+import 'package:project/features/tickets/presentation/cubit/ticket_cubit.dart';
 import 'package:project/features/booking/presentation/screens/booking_screen.dart';
 import 'package:project/features/booking/presentation/screens/checkout_screen.dart';
 import 'package:project/features/booking/presentation/cubit/booking_cubit.dart';
@@ -65,7 +68,7 @@ abstract class AppRouter {
         ),
         GoRoute(
           path: checkoutRoute,
-          builder: (context, state) => CheckoutScreen(bookingData: state.extra as Map<String, dynamic>),
+          builder: (context, state) => CheckoutScreen(bookingData: state.extra as CheckoutDataModel),
         ),
 
         // ================= MAIN LAYOUT (Stateful Bottom Nav) =================
@@ -104,8 +107,9 @@ abstract class AppRouter {
               routes: [
                 GoRoute(
                   path: ticketsRoute,
-                  builder: (context, state) => const Scaffold(
-                    body: Center(child: Text('Tickets Screen')),
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => di.sl<TicketCubit>()..fetchMyTickets(),
+                    child: const TicketsScreen(),
                   ),
                 ),
               ],

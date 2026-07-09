@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
+import 'package:project/features/booking/data/models/checkout_data_model.dart';
+
 class BookingSummaryCard extends StatelessWidget {
-  final Map<String, dynamic> bookingData;
+  final CheckoutDataModel bookingData;
 
   const BookingSummaryCard({super.key, required this.bookingData});
 
@@ -78,7 +80,7 @@ class BookingSummaryCard extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      bookingData['movie']['poster'],
+                      bookingData.moviePoster,
                       width: 80,
                       height: 120,
                       fit: BoxFit.cover,
@@ -90,7 +92,7 @@ class BookingSummaryCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          bookingData['movie']['title'],
+                          bookingData.movieTitle,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -98,19 +100,16 @@ class BookingSummaryCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        _buildInfoRow(
-                          Icons.meeting_room,
-                          '${bookingData['hall']['name']} • ${bookingData['hall']['screenType'].toString().toUpperCase()}',
-                        ),
+                        _buildInfoRow(Icons.meeting_room, bookingData.hallName),
                         const SizedBox(height: 6),
                         _buildInfoRow(
                           Icons.calendar_today,
-                          _formatDate(bookingData['date']),
+                          _formatDate(bookingData.date),
                         ),
                         const SizedBox(height: 6),
                         _buildInfoRow(
                           Icons.access_time,
-                          '${bookingData['startTime']} - ${bookingData['endTime']}',
+                          '${bookingData.startTime} - ${bookingData.endTime}',
                         ),
                       ],
                     ),
@@ -139,7 +138,7 @@ class BookingSummaryCard extends StatelessWidget {
                   Wrap(
                     spacing: 10,
                     runSpacing: 10,
-                    children: (bookingData['seats'] as List).map((seat) {
+                    children: bookingData.seats.map((seat) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -157,7 +156,7 @@ class BookingSummaryCard extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          seat['label'],
+                          seat.label,
                           style: const TextStyle(
                             color: Color(0xFFEAB308),
                             fontWeight: FontWeight.w700,
@@ -179,8 +178,8 @@ class BookingSummaryCard extends StatelessWidget {
               child: Column(
                 children: [
                   _buildPriceRow(
-                    "Ticket Price (${bookingData['totalSeats']}x)",
-                    "\$${bookingData['ticketPrice']}.00",
+                    "Ticket Price (${bookingData.totalSeats}x)",
+                    "\$${bookingData.ticketPrice.toStringAsFixed(2)}",
                   ),
                   const SizedBox(height: 12),
                   _buildPriceRow("Booking Fee", "\$2.50"),
@@ -197,7 +196,7 @@ class BookingSummaryCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "\$${bookingData['totalPrice'] + 2.50}",
+                        "\$${(bookingData.totalPrice + 2.50).toStringAsFixed(2)}",
                         style: const TextStyle(
                           color: Color(0xFFEAB308),
                           fontSize: 24,

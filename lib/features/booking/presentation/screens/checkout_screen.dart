@@ -5,13 +5,14 @@ import 'package:project/features/booking/presentation/widgets/liquid_glass_alert
 import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/widgets/liquid_glass_back_button.dart';
 import 'package:project/features/home/presentation/widgets/movie_details_background.dart';
+import 'package:project/features/booking/data/models/checkout_data_model.dart';
 
 import '../widgets/booking_summary_card.dart';
 import '../widgets/checkout_timer_display.dart';
 import '../widgets/confirm_payment_button.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  final Map<String, dynamic> bookingData;
+  final CheckoutDataModel bookingData;
 
   const CheckoutScreen({
     super.key,
@@ -42,17 +43,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void _initializeTimer() {
-    final expiresAtStr = widget.bookingData['expiresAt'];
-    if (expiresAtStr != null) {
-      try {
-        final expiresAt = DateTime.parse(expiresAtStr).toLocal();
-        final now = DateTime.now();
-        final diff = expiresAt.difference(now).inSeconds;
-        _remainingSeconds = diff > 0 ? diff : 0;
-      } catch (e) {
-        // Fallback to 300
-      }
-    }
+    final expiresAt = widget.bookingData.expiresAt;
+    final now = DateTime.now();
+    final diff = expiresAt.difference(now).inSeconds;
+    _remainingSeconds = diff > 0 ? diff : 0;
 
     _startTimer();
   }
@@ -101,8 +95,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isUrgent = _remainingSeconds < 60;
-    final summary = widget.bookingData['summary'] ?? {};
-    final movie = summary['movie'] ?? {};
 
     return Scaffold(
       backgroundColor: const Color(0xFF131313),
@@ -115,14 +107,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
           MovieDetailsBackground(
             movie: MovieEntity(
-              id: movie['_id'] ?? '1',
-              title: movie['title'] ?? 'Unknown',
+              id: widget.bookingData.movieId,
+              title: widget.bookingData.movieTitle,
               director: 'Unknown',
               year: 2026,
               gradientColors: const [0xFF000000, 0xFF000000],
               duration: '120m',
               type: 'Action',
-              imageurl: movie['poster'] ?? movie['imageurl'] ?? '',
+              imageurl: widget.bookingData.moviePoster,
               trailerUrl: '',
               description: '',
               actors: const [],
@@ -155,7 +147,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                     const SizedBox(height: 30),
 
-                    BookingSummaryCard(bookingData: summary),
+                    BookingSummaryCard(bookingData: widget.bookingData),
 
                     const SizedBox(height: 40),
 

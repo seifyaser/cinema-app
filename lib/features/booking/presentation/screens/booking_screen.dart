@@ -9,6 +9,7 @@ import 'package:project/features/booking/presentation/cubit/booking_cubit.dart';
 import 'package:project/features/booking/presentation/cubit/booking_state.dart';
 import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/widgets/animated_movie_background.dart';
+import 'package:project/features/home/presentation/widgets/liquid_glass_back_button.dart';
 
 import '../widgets/booking_bottom_bar.dart';
 import '../widgets/booking_date_seats_hall_selector.dart';
@@ -40,14 +41,26 @@ class BookingScreen extends StatelessWidget {
               children: [
                 const SizedBox(height: 16),
                 // Title
-                Text(
-                  movie.title.toUpperCase(),
-                  style: const TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const LiquidGlassBackButton(
+                        icon: Icons.arrow_back_ios_new,
+                        text: "Back",
+                      ),
+                      Text(
+                        movie.title.toUpperCase(),
+                        style: const TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -235,7 +248,8 @@ class BookingScreen extends StatelessWidget {
                                                     const SizedBox(
                                                       height: 200,
                                                       child: Center(
-                                                        child: CircularProgressIndicator(),
+                                                        child:
+                                                            CircularProgressIndicator(),
                                                       ),
                                                     )
                                                   else
@@ -345,11 +359,15 @@ class BookingScreen extends StatelessWidget {
                       if (state.actionStatus == ActionStatus.holdFailure) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(state.holdFailureMessage ?? 'Failed to hold seats'),
+                            content: Text(
+                              state.holdFailureMessage ??
+                                  'Failed to hold seats',
+                            ),
                             backgroundColor: Colors.red,
                           ),
                         );
-                      } else if (state.actionStatus == ActionStatus.holdSuccess) {
+                      } else if (state.actionStatus ==
+                          ActionStatus.holdSuccess) {
                         context.push(
                           AppRouter.checkoutRoute,
                           extra: state.holdResponseData,
@@ -359,34 +377,40 @@ class BookingScreen extends StatelessWidget {
                   },
                   buildWhen: (previous, current) {
                     if (previous is BookingLoaded && current is BookingLoaded) {
-                      return previous.selectedSeatsCount != current.selectedSeatsCount ||
-                             previous.selectedShowtime?.ticketPrice != current.selectedShowtime?.ticketPrice ||
-                             previous.actionStatus != current.actionStatus;
+                      return previous.selectedSeatsCount !=
+                              current.selectedSeatsCount ||
+                          previous.selectedShowtime?.ticketPrice !=
+                              current.selectedShowtime?.ticketPrice ||
+                          previous.actionStatus != current.actionStatus;
                     }
                     return true;
                   },
                   builder: (context, state) {
                     double price = 0.0;
                     bool isLoading = false;
-                    
+
                     if (state is BookingLoaded) {
-                      final basePrice = state.selectedShowtime?.ticketPrice ?? 0.0;
+                      final basePrice =
+                          state.selectedShowtime?.ticketPrice ?? 0.0;
                       final count = state.selectedSeatsCount;
                       price = count > 0 ? basePrice * count : basePrice;
                       isLoading = state.actionStatus == ActionStatus.holding;
                     }
-                    
+
                     return BookingBottomBar(
                       price: price,
                       isLoading: isLoading,
                       onBuyPressed: () {
-                        if (state is BookingLoaded && state.selectedSeatsCount > 0) {
+                        if (state is BookingLoaded &&
+                            state.selectedSeatsCount > 0) {
                           AuthGuard.execute(context, () {
                             context.read<BookingCubit>().holdSeats();
                           });
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please select at least one seat.')),
+                            const SnackBar(
+                              content: Text('Please select at least one seat.'),
+                            ),
                           );
                         }
                       },

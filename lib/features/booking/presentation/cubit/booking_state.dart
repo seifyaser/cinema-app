@@ -3,6 +3,7 @@ import 'package:project/core/error/failure_type.dart';
 import '../../domain/entities/showtime_entity.dart';
 import '../../domain/entities/hall_entity.dart';
 import '../../data/models/seat_model.dart';
+import '../../data/models/checkout_data_model.dart';
 import 'seat_status.dart';
 
 enum ActionStatus { idle, holding, holdSuccess, holdFailure }
@@ -36,7 +37,7 @@ class BookingLoaded extends BookingState {
 
   final ActionStatus actionStatus;
   final String? holdFailureMessage;
-  final Map<String, dynamic>? holdResponseData;
+  final CheckoutDataModel? holdResponseData;
 
   const BookingLoaded({
     required this.availableDates,
@@ -71,7 +72,7 @@ class BookingLoaded extends BookingState {
     bool? isLoadingSeats,
     ActionStatus? actionStatus,
     String? holdFailureMessage,
-    Map<String, dynamic>? holdResponseData,
+    CheckoutDataModel? holdResponseData,
   }) {
     return BookingLoaded(
       availableDates: availableDates ?? this.availableDates,

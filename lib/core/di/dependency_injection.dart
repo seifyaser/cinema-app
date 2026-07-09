@@ -11,6 +11,12 @@ import 'package:project/features/booking/data/datasources/booking_remote_data_so
 import 'package:project/features/booking/data/repositories/booking_repository_impl.dart';
 import 'package:project/features/booking/presentation/cubit/booking_cubit.dart';
 
+import 'package:project/features/tickets/data/datasources/ticket_remote_data_source.dart';
+import 'package:project/features/tickets/data/repositories/ticket_repository_impl.dart';
+import 'package:project/features/tickets/domain/repositories/ticket_repository.dart';
+import 'package:project/features/tickets/domain/usecases/get_my_tickets.dart';
+import 'package:project/features/tickets/presentation/cubit/ticket_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -40,4 +46,17 @@ Future<void> init() async {
   sl.registerFactoryParam<BookingCubit, String, dynamic>(
     (movieId, _) => BookingCubit(bookingRepository: sl(), movieId: movieId),
   );
+
+  // ========== Tickets Feature ==========
+  sl.registerLazySingleton<TicketRemoteDataSource>(
+    () => TicketRemoteDataSourceImpl(apiService: sl()),
+  );
+
+  sl.registerLazySingleton<TicketRepository>(
+    () => TicketRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton(() => GetMyTickets(sl()));
+
+  sl.registerFactory(() => TicketCubit(getMyTickets: sl()));
 }

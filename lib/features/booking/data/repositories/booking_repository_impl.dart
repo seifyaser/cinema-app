@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:project/core/error/dio_mapper.dart';
 import 'package:project/core/error/failure.dart';
 import 'package:project/core/error/failure_type.dart';
+import 'package:project/features/booking/data/models/checkout_data_model.dart';
 
 import '../../domain/entities/showtime_entity.dart';
 import '../../domain/entities/hall_entity.dart';
@@ -19,7 +20,7 @@ abstract class BookingRepository {
     String date,
   );
   Future<Either<Failure, List<SeatModel>>> getSeatMap(String showtimeId);
-  Future<Either<Failure, Map<String, dynamic>>> holdSeats(HoldSeatsRequest request);
+  Future<Either<Failure, CheckoutDataModel>> holdSeats(HoldSeatsRequest request);
 }
 
 class BookingRepositoryImpl implements BookingRepository {
@@ -117,10 +118,11 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> holdSeats(HoldSeatsRequest request) async {
+  Future<Either<Failure, CheckoutDataModel>> holdSeats(HoldSeatsRequest request) async {
     try {
       final response = await _remoteDataSource.holdSeats(request);
-      return Right(response);
+      final model = CheckoutDataModel.fromJson(response);
+      return Right(model);
     } on DioException catch (e) {
       return Left(e.toFailure());
     } catch (e) {
