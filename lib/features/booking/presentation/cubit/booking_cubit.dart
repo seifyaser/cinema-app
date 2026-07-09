@@ -159,11 +159,22 @@ class BookingCubit extends Cubit<BookingState> {
         (_) => List.generate(hall.totalColumns, (_) => SeatStatus.aisle),
       );
       
+      final validShowtimes = currentState.showtimes
+          .where((s) => s.hallName == hall.displayName)
+          .toList();
+      
+      final newSelectedShowtime = validShowtimes.isNotEmpty ? validShowtimes.first : null;
+
       emit(currentState.copyWith(
         selectedHall: hall,
         seats: initialSeats,
         selectedSeatsCount: 0,
+        selectedShowtime: newSelectedShowtime,
       ));
+
+      if (newSelectedShowtime != null) {
+        fetchSeatMap(newSelectedShowtime.id);
+      }
     }
   }
 
