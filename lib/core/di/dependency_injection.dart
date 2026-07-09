@@ -17,6 +17,10 @@ import 'package:project/features/tickets/domain/repositories/ticket_repository.d
 import 'package:project/features/tickets/domain/usecases/get_my_tickets.dart';
 import 'package:project/features/tickets/presentation/cubit/ticket_cubit.dart';
 
+import 'package:project/features/profile/data/datasources/profile_remote_data_source.dart';
+import 'package:project/features/profile/data/repositories/profile_repository.dart';
+import 'package:project/features/profile/presentation/cubit/profile_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -59,4 +63,15 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetMyTickets(sl()));
 
   sl.registerFactory(() => TicketCubit(getMyTickets: sl()));
+
+  // ========== Profile Feature ==========
+  sl.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(apiService: sl()),
+  );
+
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory(() => ProfileCubit(repository: sl()));
 }

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/screens/MovieScreenDetails.dart';
 import 'package:project/features/booking/data/models/checkout_data_model.dart';
+import 'package:project/features/profile/presentation/screens/profile_screen.dart';
+import 'package:project/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:project/features/tickets/presentation/screens/tickets_screen.dart';
 import 'package:project/features/tickets/presentation/cubit/ticket_cubit.dart';
 import 'package:project/features/booking/presentation/screens/booking_screen.dart';
@@ -120,8 +122,9 @@ abstract class AppRouter {
               routes: [
                 GoRoute(
                   path: profileRoute,
-                  builder: (context, state) => const Scaffold(
-                    body: Center(child: Text('Profile Screen')),
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => di.sl<ProfileCubit>(),
+                    child: const ProfileScreen(),
                   ),
                 ),
               ],
