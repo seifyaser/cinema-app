@@ -8,4 +8,6 @@ abstract class MovieRepository {
   Future<Either<Failure, List<MovieEntity>>> getMovies({
     MovieStatus status = MovieStatus.nowShowing,
   });
+
+  Future<Either<Failure, List<MovieEntity>>> searchMovies(String query);
 }

@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/screens/MovieScreenDetails.dart';
 import 'package:project/features/booking/data/models/checkout_data_model.dart';
+import 'package:project/features/search/presentation/screens/search_screen.dart';
+import 'package:project/features/search/presentation/cubit/search_cubit.dart';
 import 'package:project/features/profile/presentation/screens/profile_screen.dart';
 import 'package:project/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:project/features/tickets/presentation/screens/tickets_screen.dart';
@@ -97,8 +99,9 @@ abstract class AppRouter {
               routes: [
                 GoRoute(
                   path: discoverRoute,
-                  builder: (context, state) => const Scaffold(
-                    body: Center(child: Text('search Screen')),
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => di.sl<SearchCubit>(),
+                    child: const SearchScreen(),
                   ),
                 ),
               ],

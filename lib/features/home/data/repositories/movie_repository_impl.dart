@@ -48,4 +48,30 @@ class MovieRepositoryImpl implements MovieRepository {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, List<MovieEntity>>> searchMovies(String query) async {
+    try {
+      final response = await _apiService.get('/movies/search?q=$query');
+
+      if (response.data != null && response.data['data'] != null) {
+        final List<dynamic> data = response.data['data'];
+        final List<MovieModel> models = data
+            .map((json) => MovieModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+
+        return Right(models.map((model) => model.toEntity()).toList());
+      }
+      return const Right([]);
+    } on DioException catch (e) {
+      return Left(e.toFailure());
+    } catch (e) {
+      return const Left(
+        Failure(
+          type: FailureType.unknown,
+          message: 'An unexpected error occurred.',
+        ),
+      );
+    }
+  }
 }

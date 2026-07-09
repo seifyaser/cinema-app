@@ -21,6 +21,8 @@ import 'package:project/features/profile/data/datasources/profile_remote_data_so
 import 'package:project/features/profile/data/repositories/profile_repository.dart';
 import 'package:project/features/profile/presentation/cubit/profile_cubit.dart';
 
+import 'package:project/features/search/presentation/cubit/search_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -74,4 +76,7 @@ Future<void> init() async {
   );
 
   sl.registerFactory(() => ProfileCubit(repository: sl()));
+
+  // ========== Search Feature ==========
+  sl.registerFactory(() => SearchCubit(movieRepository: sl()));
 }
