@@ -2,7 +2,10 @@ import 'package:equatable/equatable.dart';
 import 'package:project/core/error/failure_type.dart';
 import '../../domain/entities/showtime_entity.dart';
 import '../../domain/entities/hall_entity.dart';
+import '../../data/models/seat_model.dart';
 import 'seat_status.dart';
+
+enum ActionStatus { idle, holding, holdSuccess, holdFailure }
 
 abstract class BookingState extends Equatable {
   const BookingState();
@@ -27,8 +30,13 @@ class BookingLoaded extends BookingState {
   final bool isLoadingHalls;
 
   final List<List<SeatStatus>> seats;
+  final List<SeatModel> seatModels;
   final int selectedSeatsCount;
   final bool isLoadingSeats;
+
+  final ActionStatus actionStatus;
+  final String? holdFailureMessage;
+  final Map<String, dynamic>? holdResponseData;
 
   const BookingLoaded({
     required this.availableDates,
@@ -40,8 +48,12 @@ class BookingLoaded extends BookingState {
     required this.selectedHall,
     this.isLoadingHalls = false,
     required this.seats,
+    this.seatModels = const [],
     required this.selectedSeatsCount,
     this.isLoadingSeats = false,
+    this.actionStatus = ActionStatus.idle,
+    this.holdFailureMessage,
+    this.holdResponseData,
   });
 
   BookingLoaded copyWith({
@@ -54,8 +66,12 @@ class BookingLoaded extends BookingState {
     HallEntity? selectedHall,
     bool? isLoadingHalls,
     List<List<SeatStatus>>? seats,
+    List<SeatModel>? seatModels,
     int? selectedSeatsCount,
     bool? isLoadingSeats,
+    ActionStatus? actionStatus,
+    String? holdFailureMessage,
+    Map<String, dynamic>? holdResponseData,
   }) {
     return BookingLoaded(
       availableDates: availableDates ?? this.availableDates,
@@ -67,8 +83,12 @@ class BookingLoaded extends BookingState {
       selectedHall: selectedHall ?? this.selectedHall,
       isLoadingHalls: isLoadingHalls ?? this.isLoadingHalls,
       seats: seats ?? this.seats,
+      seatModels: seatModels ?? this.seatModels,
       selectedSeatsCount: selectedSeatsCount ?? this.selectedSeatsCount,
       isLoadingSeats: isLoadingSeats ?? this.isLoadingSeats,
+      actionStatus: actionStatus ?? this.actionStatus,
+      holdFailureMessage: holdFailureMessage ?? this.holdFailureMessage,
+      holdResponseData: holdResponseData ?? this.holdResponseData,
     );
   }
 
@@ -83,8 +103,12 @@ class BookingLoaded extends BookingState {
         selectedHall,
         isLoadingHalls,
         seats,
+        seatModels,
         selectedSeatsCount,
         isLoadingSeats,
+        actionStatus,
+        holdFailureMessage,
+        holdResponseData,
       ];
 }
 

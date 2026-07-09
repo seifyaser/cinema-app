@@ -65,7 +65,7 @@ abstract class AppRouter {
         ),
         GoRoute(
           path: checkoutRoute,
-          builder: (context, state) => const CheckoutScreen(),
+          builder: (context, state) => CheckoutScreen(bookingData: state.extra as Map<String, dynamic>),
         ),
 
         // ================= MAIN LAYOUT (Stateful Bottom Nav) =================

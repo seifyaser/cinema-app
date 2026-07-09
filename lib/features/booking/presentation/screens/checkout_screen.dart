@@ -11,59 +11,58 @@ import '../widgets/checkout_timer_display.dart';
 import '../widgets/confirm_payment_button.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({super.key});
+  final Map<String, dynamic> bookingData;
+
+  const CheckoutScreen({
+    super.key,
+    required this.bookingData,
+  });
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  static const int _checkoutDurationSeconds = 300; // 5 minutes
-  int _remainingSeconds = _checkoutDurationSeconds;
+  int _remainingSeconds = 300; // Default 5 minutes
   Timer? _timer;
-
-  final Map<String, dynamic> _mockData = {
-    "bookingId": "665f1a2b3c4d5e6f70000050",
-    "status": "pending",
-    "movie": {
-      "_id": "665f1a2b3c4d5e6f70000010",
-      "title": "The Dark Knight",
-      "poster":
-          "https://cdn.moviefone.com/image-assets/1255833/wse4S4EuVHSNk9yzsjhdRLmipXk.jpg?d=360x540&q=20",
-    },
-    "hall": {
-      "_id": "665f1a2b3c4d5e6f70000020",
-      "name": "Hall 1",
-      "screenType": "imax",
-    },
-    "date": "2026-07-01T00:00:00.000Z",
-    "startTime": "14:30",
-    "endTime": "16:45",
-    "seats": [
-      {"label": "A1", "type": "standard"},
-      {"label": "A2", "type": "standard"},
-    ],
-    "ticketPrice": 120,
-    "totalSeats": 2,
-    "totalPrice": 240,
-  };
 
   @override
   void initState() {
     super.initState();
-    _startTimer();
+    _initializeTimer();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showLiquidGlassAlert(
         context: context,
         title: "Pending Payment",
         content:
-            "These tickets are held for you. You have 5 minutes to complete the payment process or reservation will be canceled",
+            "These tickets are held for you. You have ${_remainingSeconds ~/ 60} minutes to complete the payment process or reservation will be canceled",
       );
     });
   }
 
+  void _initializeTimer() {
+    final expiresAtStr = widget.bookingData['expiresAt'];
+    if (expiresAtStr != null) {
+      try {
+        final expiresAt = DateTime.parse(expiresAtStr).toLocal();
+        final now = DateTime.now();
+        final diff = expiresAt.difference(now).inSeconds;
+        _remainingSeconds = diff > 0 ? diff : 0;
+      } catch (e) {
+        // Fallback to 300
+      }
+    }
+
+    _startTimer();
+  }
+
   void _startTimer() {
+    if (_remainingSeconds <= 0) {
+      _onTimeExpired();
+      return;
+    }
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         setState(() {
@@ -102,6 +101,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isUrgent = _remainingSeconds < 60;
+    final summary = widget.bookingData['summary'] ?? {};
+    final movie = summary['movie'] ?? {};
 
     return Scaffold(
       backgroundColor: const Color(0xFF131313),
@@ -114,17 +115,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
           MovieDetailsBackground(
             movie: MovieEntity(
-              id: '1',
-              title: _mockData['movie']['title'],
+              id: movie['_id'] ?? '1',
+              title: movie['title'] ?? 'Unknown',
               director: 'Unknown',
               year: 2026,
-              gradientColors: [0xFF000000, 0xFF000000],
+              gradientColors: const [0xFF000000, 0xFF000000],
               duration: '120m',
               type: 'Action',
-              imageurl: _mockData['movie']['imageurl'],
+              imageurl: movie['poster'] ?? movie['imageurl'] ?? '',
               trailerUrl: '',
               description: '',
-              actors: [],
+              actors: const [],
             ),
           ),
 
@@ -154,7 +155,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                     const SizedBox(height: 30),
 
-                    BookingSummaryCard(bookingData: _mockData),
+                    BookingSummaryCard(bookingData: summary),
 
                     const SizedBox(height: 40),
 

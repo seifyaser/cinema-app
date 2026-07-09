@@ -2,12 +2,14 @@ import 'package:project/core/network/api_service.dart';
 import 'package:project/features/booking/data/models/hall_model.dart';
 import '../models/showtime_model.dart';
 import '../models/seat_model.dart';
+import '../models/hold_seats_request.dart';
 
 abstract class BookingRemoteDataSource {
   Future<List<String>> getAvailableDates(String movieId);
   Future<List<HallModel>> getAvailableHalls(String movieId, String date);
   Future<List<ShowtimeModel>> getShowtimes(String movieId, String date);
   Future<List<SeatModel>> getSeatMap(String showtimeId);
+  Future<Map<String, dynamic>> holdSeats(HoldSeatsRequest request);
 }
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
@@ -62,5 +64,11 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
           .toList();
     }
     return [];
+  }
+
+  @override
+  Future<Map<String, dynamic>> holdSeats(HoldSeatsRequest request) async {
+    final response = await _apiService.post('/bookings/hold', data: request.toJson());
+    return response.data['data'] ?? {};
   }
 }

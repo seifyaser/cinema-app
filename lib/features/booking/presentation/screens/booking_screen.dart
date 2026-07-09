@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:project/core/router/app_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:project/core/utils/auth_guard.dart';
 import 'package:project/core/widgets/failure_widget.dart';
 import 'package:project/features/booking/presentation/cubit/booking_cubit.dart';
 import 'package:project/features/booking/presentation/cubit/booking_state.dart';
@@ -332,20 +333,62 @@ class BookingScreen extends StatelessWidget {
                 ),
 
                 // Bottom bar
-                BlocSelector<BookingCubit, BookingState, double>(
-                  selector: (state) {
+                BlocConsumer<BookingCubit, BookingState>(
+                  listenWhen: (previous, current) {
+                    if (previous is BookingLoaded && current is BookingLoaded) {
+                      return previous.actionStatus != current.actionStatus;
+                    }
+                    return false;
+                  },
+                  listener: (context, state) {
+                    if (state is BookingLoaded) {
+                      if (state.actionStatus == ActionStatus.holdFailure) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.holdFailureMessage ?? 'Failed to hold seats'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      } else if (state.actionStatus == ActionStatus.holdSuccess) {
+                        context.push(
+                          AppRouter.checkoutRoute,
+                          extra: state.holdResponseData,
+                        );
+                      }
+                    }
+                  },
+                  buildWhen: (previous, current) {
+                    if (previous is BookingLoaded && current is BookingLoaded) {
+                      return previous.selectedSeatsCount != current.selectedSeatsCount ||
+                             previous.selectedShowtime?.ticketPrice != current.selectedShowtime?.ticketPrice ||
+                             previous.actionStatus != current.actionStatus;
+                    }
+                    return true;
+                  },
+                  builder: (context, state) {
+                    double price = 0.0;
+                    bool isLoading = false;
+                    
                     if (state is BookingLoaded) {
                       final basePrice = state.selectedShowtime?.ticketPrice ?? 0.0;
                       final count = state.selectedSeatsCount;
-                      return count > 0 ? basePrice * count : basePrice;
+                      price = count > 0 ? basePrice * count : basePrice;
+                      isLoading = state.actionStatus == ActionStatus.holding;
                     }
-                    return 0.0;
-                  },
-                  builder: (context, price) {
+                    
                     return BookingBottomBar(
                       price: price,
+                      isLoading: isLoading,
                       onBuyPressed: () {
-                        context.push(AppRouter.checkoutRoute);
+                        if (state is BookingLoaded && state.selectedSeatsCount > 0) {
+                          AuthGuard.execute(context, () {
+                            context.read<BookingCubit>().holdSeats();
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please select at least one seat.')),
+                          );
+                        }
                       },
                     );
                   },

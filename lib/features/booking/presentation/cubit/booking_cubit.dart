@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project/features/booking/data/repositories/booking_repository_impl.dart';
 import '../../domain/entities/showtime_entity.dart';
 import '../../domain/entities/hall_entity.dart';
+import '../../data/models/hold_seats_request.dart';
 import 'booking_state.dart';
 import 'seat_status.dart';
 
@@ -191,33 +192,37 @@ class BookingCubit extends Cubit<BookingState> {
         },
         (seatModels) {
           if (state is BookingLoaded) {
-            final st = state as BookingLoaded;
-            final currentHall = st.selectedHall;
-            if (currentHall == null) return;
+            final currentState = state as BookingLoaded;
+            final currentHall = currentState.selectedHall;
             
-            // Re-initialize with aisles
-            final newSeats = List.generate(
-              currentHall.totalRows,
-              (_) => List.generate(currentHall.totalColumns, (_) => SeatStatus.aisle),
-            );
-            
-            for (final seat in seatModels) {
-              if (seat.row.isEmpty) continue;
-              final rowIdx = seat.row.codeUnitAt(0) - 'A'.codeUnitAt(0);
-              final colIdx = seat.number - 1;
-              
-              if (rowIdx >= 0 && rowIdx < currentHall.totalRows && colIdx >= 0 && colIdx < currentHall.totalColumns) {
-                newSeats[rowIdx][colIdx] = seat.status == 'available' 
-                    ? SeatStatus.available 
-                    : SeatStatus.occupied;
+            if (currentHall != null) {
+              final newSeats = List.generate(
+                currentHall.totalRows,
+                (_) => List.generate(currentHall.totalColumns, (_) => SeatStatus.aisle),
+              );
+
+              for (final seatModel in seatModels) {
+                final rowIndex = seatModel.row.codeUnitAt(0) - 'A'.codeUnitAt(0);
+                final colIndex = seatModel.number - 1;
+
+                if (rowIndex >= 0 && rowIndex < currentHall.totalRows &&
+                    colIndex >= 0 && colIndex < currentHall.totalColumns) {
+                  
+                  if (seatModel.status == 'available') {
+                    newSeats[rowIndex][colIndex] = SeatStatus.available;
+                  } else if (seatModel.status == 'held' || seatModel.status == 'reserved') {
+                    newSeats[rowIndex][colIndex] = SeatStatus.occupied;
+                  }
+                }
               }
+
+              emit(currentState.copyWith(
+                isLoadingSeats: false,
+                seats: newSeats,
+                seatModels: seatModels,
+                selectedSeatsCount: 0,
+              ));
             }
-            
-            emit(st.copyWith(
-              seats: newSeats,
-              isLoadingSeats: false,
-              selectedSeatsCount: 0,
-            ));
           }
         },
       );
@@ -242,8 +247,6 @@ class BookingCubit extends Cubit<BookingState> {
       final isCurrentlySelected = currentSeatStatus == SeatStatus.selected;
 
       if (!isCurrentlySelected && currentState.selectedSeatsCount >= maxSelectedSeats) {
-        // Can't select more, emit state with an error or just ignore. 
-        // For simple UI response, we just ignore the tap if max reached.
         return;
       }
 
@@ -264,6 +267,71 @@ class BookingCubit extends Cubit<BookingState> {
           selectedSeatsCount: currentState.selectedSeatsCount + 1,
         ));
       }
+    }
+  }
+
+  Future<void> holdSeats() async {
+    if (state is BookingLoaded) {
+      final currentState = state as BookingLoaded;
+      
+      if (currentState.selectedShowtime == null || currentState.selectedSeatsCount == 0) {
+        return;
+      }
+
+      emit(currentState.copyWith(
+        actionStatus: ActionStatus.holding,
+        holdFailureMessage: null,
+      ));
+
+      final List<String> selectedSeatIds = [];
+
+      for (int r = 0; r < currentState.seats.length; r++) {
+        for (int c = 0; c < currentState.seats[r].length; c++) {
+          if (currentState.seats[r][c] == SeatStatus.selected) {
+            final rowLabel = String.fromCharCode('A'.codeUnitAt(0) + r);
+            final colNumber = c + 1;
+            
+            try {
+              final seatModel = currentState.seatModels.firstWhere(
+                (s) => s.row == rowLabel && s.number == colNumber,
+              );
+              selectedSeatIds.add(seatModel.seatId);
+            } catch (e) {
+              // Seat not found in models
+            }
+          }
+        }
+      }
+
+      if (selectedSeatIds.isEmpty) {
+        emit(currentState.copyWith(
+          actionStatus: ActionStatus.holdFailure,
+          holdFailureMessage: 'Could not identify selected seats.',
+        ));
+        return;
+      }
+
+      final request = HoldSeatsRequest(
+        showtimeId: currentState.selectedShowtime!.id,
+        seatIds: selectedSeatIds,
+      );
+
+      final result = await _bookingRepository.holdSeats(request);
+
+      result.fold(
+        (failure) {
+          emit(currentState.copyWith(
+            actionStatus: ActionStatus.holdFailure,
+            holdFailureMessage: failure.message,
+          ));
+        },
+        (responseData) {
+          emit(currentState.copyWith(
+            actionStatus: ActionStatus.holdSuccess,
+            holdResponseData: responseData,
+          ));
+        },
+      );
     }
   }
 }

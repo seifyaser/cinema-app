@@ -9,6 +9,7 @@ import '../../domain/entities/hall_entity.dart';
 import '../datasources/booking_remote_data_source.dart';
 import '../models/showtime_model.dart';
 import '../models/seat_model.dart';
+import '../models/hold_seats_request.dart';
 
 abstract class BookingRepository {
   Future<Either<Failure, List<String>>> getAvailableDates(String movieId);
@@ -18,6 +19,7 @@ abstract class BookingRepository {
     String date,
   );
   Future<Either<Failure, List<SeatModel>>> getSeatMap(String showtimeId);
+  Future<Either<Failure, Map<String, dynamic>>> holdSeats(HoldSeatsRequest request);
 }
 
 class BookingRepositoryImpl implements BookingRepository {
@@ -109,6 +111,23 @@ class BookingRepositoryImpl implements BookingRepository {
         Failure(
           type: FailureType.unknown,
           message: 'An unexpected error occurred while fetching seat map.',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> holdSeats(HoldSeatsRequest request) async {
+    try {
+      final response = await _remoteDataSource.holdSeats(request);
+      return Right(response);
+    } on DioException catch (e) {
+      return Left(e.toFailure());
+    } catch (e) {
+      return const Left(
+        Failure(
+          type: FailureType.unknown,
+          message: 'An unexpected error occurred while holding seats.',
         ),
       );
     }

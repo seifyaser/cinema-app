@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class BookingBottomBar extends StatelessWidget {
   final double price;
   final VoidCallback onBuyPressed;
+  final bool isLoading;
 
   const BookingBottomBar({
     super.key,
     required this.price,
     required this.onBuyPressed,
+    this.isLoading = false,
   });
 
   @override
@@ -26,22 +28,31 @@ class BookingBottomBar extends StatelessWidget {
             Expanded(
               flex: 6,
               child: GestureDetector(
-                onTap: onBuyPressed,
+                onTap: isLoading ? null : onBuyPressed,
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFFEAB308),
                     borderRadius: BorderRadius.circular(28),
                   ),
                   alignment: Alignment.center,
-                  child: const Text(
-                    "Buy Tickets",
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      color: Colors.black,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
-                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.black,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          "Buy Tickets",
+                          style: TextStyle(
+                            fontFamily: 'Manrope',
+                            color: Colors.black,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                          ),
+                        ),
                 ),
               ),
             ),
