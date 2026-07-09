@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:project/core/router/app_router.dart';
 import 'package:project/core/widgets/failure_widget.dart';
 import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/widgets/animated_movie_background.dart';
@@ -33,6 +35,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _onSearchChanged(String query) {
+    setState(() {}); // Trigger rebuild for animation
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
@@ -40,6 +43,8 @@ class _SearchScreenState extends State<SearchScreen> {
       }
     });
   }
+
+  bool get _isSearching => _searchController.text.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +83,11 @@ class _SearchScreenState extends State<SearchScreen> {
               SafeArea(
                 child: Column(
                   children: [
-                    const SizedBox(height: 20),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOutCubic,
+                      height: _isSearching ? 20 : MediaQuery.of(context).size.height * 0.45,
+                    ),
                     // Search Bar
                     SearchBarWidget(
                       controller: _searchController,
@@ -86,7 +95,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
 
                     // Results
-                    Expanded(child: _buildResults(state)),
+                    Expanded(
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeIn,
+                        opacity: _isSearching ? 1.0 : 0.0,
+                        child: _isSearching ? _buildResults(state) : const SizedBox.shrink(),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -133,20 +149,17 @@ class _SearchScreenState extends State<SearchScreen> {
           });
         },
         itemBuilder: (context, index) {
-          return SearchResultCard(movie: state.movies[index]);
+          final movie = state.movies[index];
+          return GestureDetector(
+            onTap: () {
+              context.push(AppRouter.movieDetailsRoute, extra: movie);
+            },
+            child: SearchResultCard(movie: movie),
+          );
         },
       );
     }
 
-    return const Center(
-      child: Text(
-        'Type to start searching...',
-        style: TextStyle(
-          color: Colors.white54,
-          fontSize: 18,
-          fontFamily: 'Manrope',
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }
