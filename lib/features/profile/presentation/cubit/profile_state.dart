@@ -21,3 +21,5 @@ class ProfileError extends ProfileState {
 
   const ProfileError({required this.type, required this.message});
 }
+
+class ProfileLoggedOut extends ProfileState {}

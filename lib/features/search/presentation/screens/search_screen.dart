@@ -86,7 +86,9 @@ class _SearchScreenState extends State<SearchScreen> {
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 600),
                       curve: Curves.easeOutCubic,
-                      height: _isSearching ? 20 : MediaQuery.of(context).size.height * 0.45,
+                      height: _isSearching
+                          ? 20
+                          : MediaQuery.of(context).size.height * 0.45,
                     ),
                     // Search Bar
                     SearchBarWidget(
@@ -100,7 +102,9 @@ class _SearchScreenState extends State<SearchScreen> {
                         duration: const Duration(milliseconds: 600),
                         curve: Curves.easeIn,
                         opacity: _isSearching ? 1.0 : 0.0,
-                        child: _isSearching ? _buildResults(state) : const SizedBox.shrink(),
+                        child: _isSearching
+                            ? _buildResults(state)
+                            : const SizedBox.shrink(),
                       ),
                     ),
                   ],
@@ -140,23 +144,26 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         );
       }
-      return CinemaDeck(
-        itemCount: state.movies.length,
-        onIndexChanged: (index) {
-          setState(() {
-            _selectedIndex = index;
-            _selectedMovie = state.movies[index];
-          });
-        },
-        itemBuilder: (context, index) {
-          final movie = state.movies[index];
-          return GestureDetector(
-            onTap: () {
-              context.push(AppRouter.movieDetailsRoute, extra: movie);
-            },
-            child: SearchResultCard(movie: movie),
-          );
-        },
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 36),
+        child: CinemaDeck(
+          itemCount: state.movies.length,
+          onIndexChanged: (index) {
+            setState(() {
+              _selectedIndex = index;
+              _selectedMovie = state.movies[index];
+            });
+          },
+          itemBuilder: (context, index) {
+            final movie = state.movies[index];
+            return GestureDetector(
+              onTap: () {
+                context.push(AppRouter.movieDetailsRoute, extra: movie);
+              },
+              child: SearchResultCard(movie: movie),
+            );
+          },
+        ),
       );
     }
 

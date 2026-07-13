@@ -5,12 +5,16 @@ class FailureWidget extends StatelessWidget {
   final FailureType type;
   final String message;
   final VoidCallback onRetry;
+  final String? buttonText;
+  final IconData? buttonIcon;
 
   const FailureWidget({
     super.key,
     required this.type,
     required this.message,
     required this.onRetry,
+    this.buttonText,
+    this.buttonIcon,
   });
 
   @override
@@ -43,8 +47,8 @@ class FailureWidget extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              icon: Icon(buttonIcon ?? Icons.refresh),
+              label: Text(buttonText ?? 'Try Again'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFE51937),
                 foregroundColor: Colors.white,

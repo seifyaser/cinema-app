@@ -36,4 +36,6 @@ class AuthCubit extends Cubit<AuthState> {
       (user) => emit(AuthSuccess(user)),
     );
   }
+
+
 }
