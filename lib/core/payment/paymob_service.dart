@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:paymob/paymob.dart';
-import 'package:project/core/config/env_config.dart';
+import 'package:flutter_paymob_sdk/flutter_paymob_sdk.dart' as paymob_sdk;
 
 class PaymobService {
-  /// Initiates a payment using the official Paymob SDK.
-  /// You must provide the [clientSecret] obtained from your backend.
-  static Future<PaymobPaymentResult> pay({
+  final _sdkService = paymob_sdk.PaymobService();
+
+  /// Initiates a payment using the official Paymob Flutter SDK.
+  /// [clientSecret] is obtained from your backend /payments/intention endpoint.
+  Future<paymob_sdk.PaymobPaymentResult> pay({
     required String clientSecret,
-    String? appName,
-    Color? buttonBackgroundColor,
-    Color? buttonTextColor,
+    String appName = 'Cinema Immersive',
+    Color buttonBackgroundColor = Colors.deepPurple,
+    Color buttonTextColor = Colors.white,
   }) async {
-    final result = await Paymob.pay(
-      publicKey: EnvConfig.paymobPublicKey,
+    final result = await _sdkService.payWithPaymob(
+      publicKey: 'egy_pk_test_fO4LnfA1Q767OMJlnTSz5gAJ0ChavYVg',
       clientSecret: clientSecret,
-      appName: appName ?? 'Cinema Immersive',
-      buttonBackgroundColor: buttonBackgroundColor ?? Colors.deepPurple,
-      buttonTextColor: buttonTextColor ?? Colors.white,
-      showSaveCard: false,
+      customization: paymob_sdk.PaymobCustomization(
+        appName: appName,
+        buttonBackgroundColor: buttonBackgroundColor,
+        buttonTextColor: buttonTextColor,
+        showSaveCard: false,
+        saveCardDefault: false,
+        showTransactionResult: false,
+      ),
     );
 
     return result;

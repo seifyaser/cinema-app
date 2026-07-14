@@ -34,7 +34,7 @@ class ApiService {
   final TokenStorage _tokenStorage;
 
   static const String baseUrl =
-      'https://any-thorough-canvas-knife.trycloudflare.com/api/v1/';
+      'https://relay-experts-cartoons-process.trycloudflare.com/api/v1/';
 
   // ---------------------------------------------------------------------------
   // Public HTTP methods
@@ -165,6 +165,7 @@ class _LoggingInterceptor extends Interceptor {
         '[API] ✕ ${err.response?.statusCode} ${err.requestOptions.uri}\n'
         '  ${err.message}',
       );
+      debugPrint(err.response?.data.toString());
     }
     handler.next(err);
   }

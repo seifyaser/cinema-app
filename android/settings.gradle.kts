@@ -19,6 +19,28 @@ pluginManagement {
     }
 }
 
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
+        maven { url = uri("https://jitpack.io") }
+
+        val flutterPluginsDeps = file("../.flutter-plugins-dependencies")
+        if (flutterPluginsDeps.exists()) {
+            @Suppress("UNCHECKED_CAST")
+            val json = groovy.json.JsonSlurper().parse(flutterPluginsDeps) as Map<String, Any>
+            @Suppress("UNCHECKED_CAST")
+            val androidPlugins = ((json["plugins"] as? Map<String, Any>)?.get("android")
+                as? List<Map<String, Any>>) ?: emptyList()
+            androidPlugins.find { it["name"] == "flutter_paymob_sdk" }
+                ?.get("path")
+                ?.let { maven { url = uri("${it}android/libs") } }
+        }
+    }
+}
+
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "8.11.1" apply false

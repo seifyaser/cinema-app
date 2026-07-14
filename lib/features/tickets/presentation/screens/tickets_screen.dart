@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:project/features/booking/data/models/checkout_data_model.dart';
 import '../cubit/ticket_cubit.dart';
 import '../cubit/ticket_state.dart';
 import '../widgets/ticket_card.dart';
@@ -138,7 +140,29 @@ class _TicketsScreenState extends State<TicketsScreen>
           return TicketCard(
             ticket: ticket,
             onTap: () {
-              // Later: View Barcode / E-ticket details
+              if (ticket.status.toLowerCase() == 'pending') {
+                final checkoutData = CheckoutDataModel(
+                  bookingId: ticket.id,
+                  expiresAt: ticket.expiresAt ?? DateTime.now(),
+                  movieId: ticket.movieId,
+                  movieTitle: ticket.movieTitle,
+                  moviePoster: ticket.moviePoster,
+                  hallId: '',
+                  hallName: ticket.hallName,
+                  date: ticket.date,
+                  startTime: ticket.startTime,
+                  endTime: ticket.endTime,
+                  seats: [],
+                  ticketPrice: ticket.totalSeats > 0
+                      ? ticket.totalPrice / ticket.totalSeats
+                      : 0,
+                  totalSeats: ticket.totalSeats,
+                  totalPrice: ticket.totalPrice,
+                );
+                context.push('/checkout', extra: checkoutData);
+              } else {
+                // Later: View Barcode / E-ticket details for confirmed tickets
+              }
             },
           );
         },
