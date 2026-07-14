@@ -10,9 +10,9 @@ workflows:
         script: |
           flutter pub get
 
-      - name: Build iOS Simulator (Profile)
+      - name: Build iOS Simulator
         script: |
-          flutter build ios --simulator --profile
+          flutter build ios --simulator
 
       - name: Zip Runner.app
         script: |
