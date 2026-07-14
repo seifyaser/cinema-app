@@ -1,4 +1,4 @@
-
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project/features/home/domain/entities/movie_entity.dart';
@@ -36,9 +36,10 @@ abstract class AppRouter {
   static const String bookingRoute = '/booking';
   static const String checkoutRoute = '/checkout';
 
-  static GoRouter router() {
+  static GoRouter router(GlobalKey<NavigatorState> navigatorKey) {
     return GoRouter(
       initialLocation: homeRoute,
+      navigatorKey: navigatorKey,
       routes: [
         // ================= AUTH =================
         GoRoute(
@@ -65,14 +66,16 @@ abstract class AppRouter {
           builder: (context, state) {
             final movie = state.extra as MovieEntity;
             return BlocProvider(
-              create: (context) => di.sl<BookingCubit>(param1: movie.id)..fetchAvailableDates(),
+              create: (context) =>
+                  di.sl<BookingCubit>(param1: movie.id)..fetchAvailableDates(),
               child: BookingScreen(movie: movie),
             );
           },
         ),
         GoRoute(
           path: checkoutRoute,
-          builder: (context, state) => CheckoutScreen(bookingData: state.extra as CheckoutDataModel),
+          builder: (context, state) =>
+              CheckoutScreen(bookingData: state.extra as CheckoutDataModel),
         ),
 
         // ================= MAIN LAYOUT (Stateful Bottom Nav) =================
@@ -138,4 +141,3 @@ abstract class AppRouter {
     );
   }
 }
-

@@ -18,9 +18,7 @@ import 'package:device_preview/device_preview.dart';
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Firebase must be initialised in the background isolate as well.
   await Firebase.initializeApp();
-  debugPrint(
-    '[FCM] Background message received: ${message.messageId}',
-  );
+  debugPrint('[FCM] Background message received: ${message.messageId}');
   // No local notification here — the OS shows the system notification
   // automatically for data-only messages with notification payload.
 }
@@ -99,7 +97,7 @@ class _MyAppState extends State<MyApp> {
           error: Color(0xFFFFB4AB),
         ),
       ),
-      routerConfig: AppRouter.router(),
+      routerConfig: AppRouter.router(navigatorKey),
     );
   }
 }

@@ -13,8 +13,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 /// **No Firebase code lives here.**
 class LocalNotificationService {
   /// Creates a [LocalNotificationService].
-  LocalNotificationService()
-      : _plugin = FlutterLocalNotificationsPlugin();
+  LocalNotificationService() : _plugin = FlutterLocalNotificationsPlugin();
 
   final FlutterLocalNotificationsPlugin _plugin;
 
@@ -36,8 +35,9 @@ class LocalNotificationService {
   Future<void> initialize({
     required void Function(String? payload) onNotificationTap,
   }) async {
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
 
     const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: false, // Already handled by FirebaseMessaging
@@ -75,7 +75,8 @@ class LocalNotificationService {
 
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
   }
 
@@ -90,7 +91,7 @@ class LocalNotificationService {
   Future<void> showNotification(RemoteMessage message) async {
     final notification = message.notification;
     if (notification == null) return;
-
+    debugPrint('[FCM DATA] ${message.data}');
     const androidDetails = AndroidNotificationDetails(
       _channelId,
       _channelName,

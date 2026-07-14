@@ -19,8 +19,8 @@ class NotificationInitializer {
   NotificationInitializer({
     required NotificationService notificationService,
     required NotificationHandler notificationHandler,
-  })  : _notificationService = notificationService,
-        _notificationHandler = notificationHandler;
+  }) : _notificationService = notificationService,
+       _notificationHandler = notificationHandler;
 
   final NotificationService _notificationService;
   final NotificationHandler _notificationHandler;
@@ -38,7 +38,10 @@ class NotificationInitializer {
     // 1. Request permission
     await _notificationService.requestPermission();
 
-    // 2. iOS foreground presentation options
+    // 2. Get device token
+    await _notificationService.getToken();
+
+    // 3. iOS foreground presentation options
     await _notificationService.setForegroundNotificationPresentationOptions();
 
     // 3. Wire all listeners (foreground, background-open, terminated)
