@@ -156,7 +156,11 @@ packages:
   fcm_notification_kit:
     dependency: "direct main"
     description:
+<<<<<<< HEAD
       path: "packages/fcm_notification_kit"
+=======
+      path: "../packages/fcm_notification_kit"
+>>>>>>> f60f726897c528227b337af23421e4883077d2ea
       relative: true
     source: path
     version: "1.0.0"
