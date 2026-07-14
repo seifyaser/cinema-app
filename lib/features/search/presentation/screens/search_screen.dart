@@ -158,7 +158,7 @@ class _SearchScreenState extends State<SearchScreen> {
             final movie = state.movies[index];
             return GestureDetector(
               onTap: () {
-                context.push(AppRouter.movieDetailsRoute, extra: movie);
+                context.push('${AppRouter.movieDetailsRoute}/${movie.id}', extra: movie);
               },
               child: SearchResultCard(movie: movie),
             );

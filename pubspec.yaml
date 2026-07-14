@@ -49,6 +49,8 @@ dependencies:
   flutter_secure_storage: ^10.3.1
   inline_youtube_player:
     path: packages/inline_youtube_player
+  fcm_notification_kit:
+    path: packages/fcm_notification_kit
   jwt_decoder: ^2.0.1
   equatable: ^2.1.0
   firebase_core: ^3.13.1

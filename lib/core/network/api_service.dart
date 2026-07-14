@@ -33,7 +33,8 @@ class ApiService {
   late final Dio _dio;
   final TokenStorage _tokenStorage;
 
-  static const String baseUrl = 'http://192.168.1.4:3000/api/v1/';
+  static const String baseUrl =
+      'https://any-thorough-canvas-knife.trycloudflare.com/api/v1/';
 
   // ---------------------------------------------------------------------------
   // Public HTTP methods

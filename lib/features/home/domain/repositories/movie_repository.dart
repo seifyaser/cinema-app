@@ -10,4 +10,6 @@ abstract class MovieRepository {
   });
 
   Future<Either<Failure, List<MovieEntity>>> searchMovies(String query);
+
+  Future<Either<Failure, MovieEntity>> getMovieById(String id);
 }

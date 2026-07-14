@@ -2,33 +2,33 @@ import 'dart:async';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:project/core/notifications/local_notification_service.dart';
-import 'package:project/core/notifications/models/notification_payload.dart';
-import 'package:project/core/notifications/notification_router.dart';
-import 'package:project/core/notifications/notification_service.dart';
+import 'package:fcm_notification_kit/src/local_notification_service.dart';
+import 'package:fcm_notification_kit/src/notification_service.dart';
 
 /// Orchestrates the entire notification lifecycle.
 ///
 /// Responsibilities:
 /// - Subscribe to all FCM message streams (foreground, background-open, terminated).
 /// - Show local notifications when the app is in foreground.
-/// - Delegate navigation to [NotificationRouter].
+/// - Delegate navigation via the [onNavigate] callback — the package never
+///   knows about your routes.
 ///
 /// **No Firebase code lives here (it is injected via [NotificationService]).**
-/// **No UI/widget code lives here.**
+/// **No route-specific code lives here.**
 class NotificationHandler {
-  /// Creates a [NotificationHandler].
   NotificationHandler({
     required NotificationService notificationService,
     required LocalNotificationService localNotificationService,
-    required NotificationRouter notificationRouter,
+    required void Function(BuildContext context, Map<String, dynamic> data)
+        onNavigate,
   })  : _notificationService = notificationService,
         _localNotificationService = localNotificationService,
-        _notificationRouter = notificationRouter;
+        _onNavigate = onNavigate;
 
   final NotificationService _notificationService;
   final LocalNotificationService _localNotificationService;
-  final NotificationRouter _notificationRouter;
+  final void Function(BuildContext context, Map<String, dynamic> data)
+      _onNavigate;
 
   final List<StreamSubscription<dynamic>> _subscriptions = [];
 
@@ -36,21 +36,19 @@ class NotificationHandler {
   // Initialisation
   // ---------------------------------------------------------------------------
 
-  /// Wires all listeners. Call this once after services are initialised.
-  ///
-  /// [navigatorKey] is used to access [BuildContext] for navigation when
-  /// there is no widget-level context available (terminated / background tap).
+  /// Wires all listeners. Call once after services are initialised.
   Future<void> initialize(GlobalKey<NavigatorState> navigatorKey) async {
     await _localNotificationService.initialize(
       onNotificationTap: (payload) {
         final context = navigatorKey.currentContext;
-        if (context != null) {
-          _notificationRouter.routeFromRawPayload(context, payload);
+        if (context != null && payload != null && payload.isNotEmpty) {
+          final map = _parseQueryPayload(payload);
+          _onNavigate(context, map);
         }
       },
     );
 
-    _listenForeground(navigatorKey);
+    _listenForeground();
     _listenBackgroundOpen(navigatorKey);
     await _handleTerminatedLaunch(navigatorKey);
   }
@@ -59,38 +57,29 @@ class NotificationHandler {
   // Stream listeners
   // ---------------------------------------------------------------------------
 
-  /// Handles messages that arrive while the app is **in foreground**.
-  void _listenForeground(GlobalKey<NavigatorState> navigatorKey) {
+  void _listenForeground() {
     final sub = _notificationService.onMessage.listen((message) async {
       debugPrint('[NotifHandler] Foreground message: ${message.messageId}');
       await _localNotificationService.showNotification(message);
-      // We intentionally do NOT auto-navigate on foreground messages;
-      // the user should tap the notification to trigger navigation.
     });
     _subscriptions.add(sub);
   }
 
-  /// Handles notification taps that resume the app from **background**.
   void _listenBackgroundOpen(GlobalKey<NavigatorState> navigatorKey) {
     final sub = _notificationService.onMessageOpenedApp.listen((message) {
       debugPrint(
-        '[NotifHandler] Background-open message: ${message.messageId}',
-      );
+          '[NotifHandler] Background-open message: ${message.messageId}');
       _navigate(navigatorKey, message);
     });
     _subscriptions.add(sub);
   }
 
-  /// Handles the notification that launched the app from **terminated** state.
   Future<void> _handleTerminatedLaunch(
-    GlobalKey<NavigatorState> navigatorKey,
-  ) async {
+      GlobalKey<NavigatorState> navigatorKey) async {
     final message = await _notificationService.getInitialMessage();
     if (message != null) {
       debugPrint(
-        '[NotifHandler] Terminated-launch message: ${message.messageId}',
-      );
-      // Delay navigation until the first frame is rendered.
+          '[NotifHandler] Terminated-launch message: ${message.messageId}');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _navigate(navigatorKey, message);
       });
@@ -110,19 +99,29 @@ class NotificationHandler {
       debugPrint('[NotifHandler] No context available for navigation.');
       return;
     }
-    final payload = NotificationPayload.fromMap(message.data);
-    if (payload != null) {
-      _notificationRouter.routeFromPayload(context, payload);
+    if (message.data.isNotEmpty) {
+      _onNavigate(context, message.data);
     }
+  }
+
+  /// Parses a query-string payload (`key=value&key=value`) into a map.
+  Map<String, dynamic> _parseQueryPayload(String payload) {
+    return Map.fromEntries(
+      payload.split('&').map((pair) {
+        final parts = pair.split('=');
+        return MapEntry(
+          parts.first,
+          parts.length > 1 ? parts.last : '',
+        );
+      }),
+    );
   }
 
   // ---------------------------------------------------------------------------
   // Cleanup
   // ---------------------------------------------------------------------------
 
-  /// Cancels all active stream subscriptions.
-  ///
-  /// Call this if the notification system is torn down (e.g. in tests).
+  /// Cancels all active stream subscriptions (useful in tests).
   Future<void> dispose() async {
     for (final sub in _subscriptions) {
       await sub.cancel();

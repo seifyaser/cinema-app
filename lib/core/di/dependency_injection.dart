@@ -2,18 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:project/core/network/api_service.dart';
 import 'package:project/core/notifications/data/datasources/notification_remote_data_source.dart';
-import 'package:project/core/notifications/data/repositories/notification_repository.dart';
-import 'package:project/core/notifications/local_notification_service.dart';
-import 'package:project/core/notifications/notification_handler.dart';
-import 'package:project/core/notifications/notification_initializer.dart';
 import 'package:project/core/notifications/notification_router.dart';
-import 'package:project/core/notifications/notification_service.dart';
 import 'package:project/core/storage/token_storage.dart';
+import 'package:fcm_notification_kit/fcm_notification_kit.dart';
 import 'package:project/features/auth/data/repositories/auth_repository.dart';
 import 'package:project/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:project/features/home/data/repositories/movie_repository_impl.dart';
 import 'package:project/features/home/domain/repositories/movie_repository.dart';
 import 'package:project/features/home/presentation/cubit/home_cubit.dart';
+import 'package:project/features/home/presentation/cubit/movie_details_cubit.dart';
 
 import 'package:project/features/booking/data/datasources/booking_remote_data_source.dart';
 import 'package:project/features/booking/data/repositories/booking_repository_impl.dart';
@@ -40,9 +37,9 @@ Future<void> init({GlobalKey<NavigatorState>? navigatorKey}) async {
   // Core — Network
   sl.registerLazySingleton<ApiService>(() => ApiService(sl()));
 
-  // ========== Notifications Core ==========
+  // ========== Notifications Core (fcm_notification_kit) ==========
   sl.registerLazySingleton<NotificationRemoteDataSource>(
-    () => NotificationRemoteDataSourceStub(),
+    () => NotificationRemoteDataSourceImpl(dio: sl<ApiService>().dio),
   );
   sl.registerLazySingleton<NotificationService>(() => NotificationService());
   sl.registerLazySingleton<NotificationRepository>(
@@ -52,20 +49,26 @@ Future<void> init({GlobalKey<NavigatorState>? navigatorKey}) async {
     ),
   );
   sl.registerLazySingleton<LocalNotificationService>(
-    () => LocalNotificationService(),
+    () => LocalNotificationService(
+      channelId: 'cinema_channel',
+      channelName: 'Cinema Notifications',
+      channelDescription: 'Notifications for new movies, bookings, and updates.',
+    ),
   );
+  // App-specific router — not in the package
   sl.registerLazySingleton<NotificationRouter>(() => NotificationRouter());
   sl.registerLazySingleton<NotificationHandler>(
     () => NotificationHandler(
       notificationService: sl(),
       localNotificationService: sl(),
-      notificationRouter: sl(),
+      onNavigate: (context, data) => sl<NotificationRouter>().route(context, data),
     ),
   );
   sl.registerLazySingleton<NotificationInitializer>(
     () => NotificationInitializer(
       notificationService: sl(),
       notificationHandler: sl(),
+      notificationRepository: sl(),
     ),
   );
 
@@ -82,10 +85,10 @@ Future<void> init({GlobalKey<NavigatorState>? navigatorKey}) async {
   sl.registerLazySingleton<BookingRepository>(
     () => BookingRepositoryImpl(remoteDataSource: sl()),
   );
-
   // Cubits
   sl.registerFactory<AuthCubit>(() => AuthCubit(authRepository: sl()));
   sl.registerFactory<HomeCubit>(() => HomeCubit(movieRepository: sl()));
+  sl.registerFactory<MovieDetailsCubit>(() => MovieDetailsCubit(movieRepository: sl()));
   sl.registerFactoryParam<BookingCubit, String, dynamic>(
     (movieId, _) => BookingCubit(bookingRepository: sl(), movieId: movieId),
   );
@@ -112,7 +115,10 @@ Future<void> init({GlobalKey<NavigatorState>? navigatorKey}) async {
     () => ProfileRepository(remoteDataSource: sl(), tokenStorage: sl()),
   );
 
-  sl.registerFactory(() => ProfileCubit(repository: sl()));
+  sl.registerFactory(() => ProfileCubit(
+    repository: sl(),
+    notificationRepository: sl(),
+  ));
 
   // ========== Search Feature ==========
   sl.registerFactory(() => SearchCubit(movieRepository: sl()));
