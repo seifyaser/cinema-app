@@ -72,7 +72,10 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     // 5. Initialise the notification infrastructure after the first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await di.sl<NotificationInitializer>().initialize(navigatorKey);
+      await di.sl<NotificationInitializer>().initialize(
+        navigatorKey,
+        topics: ['ALL_USERS'],
+      );
     });
   }
 

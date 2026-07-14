@@ -1,44 +1,25 @@
-import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
+import 'package:fcm_notification_kit/fcm_notification_kit.dart';
 
-/// Contract for the remote notification data source.
+/// Project-level data source.
 ///
-/// The stub implementation logs to console only.
-/// Swap in a real [ApiService]-based implementation when the backend is ready.
-abstract class NotificationRemoteDataSource {
-  /// Sends the FCM [token] to the backend for storage.
-  Future<void> registerDeviceToken(String token);
+/// Delegates to [FcmTokenDataSource] from [fcm_notification_kit], passing
+/// this app's configured [Dio] instance (with auth headers already set) and
+/// the correct endpoint path.
+class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
+  NotificationRemoteDataSourceImpl({required Dio dio})
+      : _inner = FcmTokenDataSource(
+          dio: dio,
+          tokenEndpoint: 'users/me/fcm-token',
+        );
 
-  /// Notifies the backend to remove the FCM [token].
-  Future<void> unregisterDeviceToken(String token);
-}
-
-// ---------------------------------------------------------------------------
-// Stub implementation (backend not ready yet)
-// ---------------------------------------------------------------------------
-
-/// Stub implementation that prints the token to the debug console.
-///
-/// **Replace this with a real HTTP implementation once the backend endpoint
-/// `POST /api/v1/notifications/device-token` is available.**
-class NotificationRemoteDataSourceStub
-    implements NotificationRemoteDataSource {
-  @override
-  Future<void> registerDeviceToken(String token) async {
-    // TODO: Replace with real API call:
-    // await _apiService.post(
-    //   'notifications/device-token',
-    //   data: {'token': token, 'platform': Platform.isAndroid ? 'android' : 'ios'},
-    // );
-    debugPrint('[NotifDataSource] STUB — registerDeviceToken: $token');
-  }
+  final FcmTokenDataSource _inner;
 
   @override
-  Future<void> unregisterDeviceToken(String token) async {
-    // TODO: Replace with real API call:
-    // await _apiService.delete(
-    //   'notifications/device-token',
-    //   data: {'token': token},
-    // );
-    debugPrint('[NotifDataSource] STUB — unregisterDeviceToken: $token');
-  }
+  Future<void> registerDeviceToken(String token) =>
+      _inner.registerDeviceToken(token);
+
+  @override
+  Future<void> unregisterDeviceToken(String token) =>
+      _inner.unregisterDeviceToken(token);
 }

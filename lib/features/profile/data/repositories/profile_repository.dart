@@ -33,11 +33,13 @@ class ProfileRepository {
 
   Future<Either<Failure, LogoutResponse>> logout() async {
     try {
-      await remoteDataSource.logout();
+      try {
+        await remoteDataSource.logout();
+      } catch (e) {
+        // Ignore remote logout errors to ensure local token is still deleted
+      }
       await tokenStorage.deleteToken();
       return Right(LogoutResponse(success: true, message: 'Logout successful'));
-    } on DioException catch (e) {
-      return Left(e.toFailure());
     } catch (e) {
       return Left(Failure(type: FailureType.unknown, message: e.toString()));
     }

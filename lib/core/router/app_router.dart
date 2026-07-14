@@ -21,6 +21,7 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../shared/main_layout.dart';
 import '../di/dependency_injection.dart' as di;
+import 'package:project/features/home/presentation/cubit/movie_details_cubit.dart';
 
 abstract class AppRouter {
   // Auth Screens (User will provide implementation)
@@ -57,9 +58,15 @@ abstract class AppRouter {
           ),
         ),
         GoRoute(
-          path: movieDetailsRoute,
-          builder: (context, state) =>
-              MovieDetailsScreen(movie: state.extra as MovieEntity),
+          path: '$movieDetailsRoute/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id'];
+            final movie = state.extra as MovieEntity?;
+            return BlocProvider(
+              create: (_) => di.sl<MovieDetailsCubit>(),
+              child: MovieDetailsScreen(movieId: id, movie: movie),
+            );
+          },
         ),
         GoRoute(
           path: bookingRoute,

@@ -72,7 +72,7 @@ class _ClickedTabViewState extends State<ClickedTabView> {
               final movie = widget.movies[index];
               return GestureDetector(
                 onTap: () {
-                  context.push(AppRouter.movieDetailsRoute, extra: movie);
+                  context.push('${AppRouter.movieDetailsRoute}/${movie.id}', extra: movie);
                 },
                 child: MovieCard(key: ValueKey(movie.title), movie: movie),
               );
