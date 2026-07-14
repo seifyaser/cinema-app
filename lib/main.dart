@@ -1,14 +1,55 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:project/core/notifications/notification_initializer.dart';
 import 'package:project/core/router/app_router.dart';
 import 'package:project/core/di/dependency_injection.dart' as di;
 import 'package:device_preview/device_preview.dart';
 
+// ---------------------------------------------------------------------------
+// FCM Background handler (must be a top-level function)
+// ---------------------------------------------------------------------------
+
+/// Handles FCM messages that arrive while the app is **terminated or in
+/// background**. This function is run in a separate Dart isolate — keep it
+/// light and avoid UI calls.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Firebase must be initialised in the background isolate as well.
+  await Firebase.initializeApp();
+  debugPrint(
+    '[FCM] Background message received: ${message.messageId}',
+  );
+  // No local notification here — the OS shows the system notification
+  // automatically for data-only messages with notification payload.
+}
+
+// ---------------------------------------------------------------------------
+// Navigator key (shared between the router and the notification handler)
+// ---------------------------------------------------------------------------
+
+/// A global [NavigatorState] key used to navigate from notification taps
+/// without requiring a [BuildContext].
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// ---------------------------------------------------------------------------
+// Entry point
+// ---------------------------------------------------------------------------
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await di.init();
+  // 1. Initialise Firebase
+  await Firebase.initializeApp();
 
+  // 2. Register the background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // 3. Initialise GetIt dependency graph (pass navigatorKey for notifications)
+  await di.init(navigatorKey: navigatorKey);
+
+  // 4. System UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -16,17 +57,26 @@ void main() async {
       statusBarIconBrightness: Brightness.light,
     ),
   );
-  runApp(
-    // DevicePreview(
-    //   enabled: !kReleaseMode,
-    //   builder: (context) => MyApp(), // Wrap your app
-    // ),
-    MyApp(),
-  );
+
+  runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // 5. Initialise the notification infrastructure after the first frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await di.sl<NotificationInitializer>().initialize(navigatorKey);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

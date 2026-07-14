@@ -1,5 +1,13 @@
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:project/core/network/api_service.dart';
+import 'package:project/core/notifications/data/datasources/notification_remote_data_source.dart';
+import 'package:project/core/notifications/data/repositories/notification_repository.dart';
+import 'package:project/core/notifications/local_notification_service.dart';
+import 'package:project/core/notifications/notification_handler.dart';
+import 'package:project/core/notifications/notification_initializer.dart';
+import 'package:project/core/notifications/notification_router.dart';
+import 'package:project/core/notifications/notification_service.dart';
 import 'package:project/core/storage/token_storage.dart';
 import 'package:project/features/auth/data/repositories/auth_repository.dart';
 import 'package:project/features/auth/presentation/cubit/auth_cubit.dart';
@@ -25,19 +33,48 @@ import 'package:project/features/search/presentation/cubit/search_cubit.dart';
 
 final sl = GetIt.instance;
 
-Future<void> init() async {
+Future<void> init({GlobalKey<NavigatorState>? navigatorKey}) async {
   // Core — Storage
   sl.registerLazySingleton<TokenStorage>(() => TokenStorage());
 
   // Core — Network
   sl.registerLazySingleton<ApiService>(() => ApiService(sl()));
 
+  // ========== Notifications Core ==========
+  sl.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceStub(),
+  );
+  sl.registerLazySingleton<NotificationService>(() => NotificationService());
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+      remoteDataSource: sl(),
+      notificationService: sl(),
+    ),
+  );
+  sl.registerLazySingleton<LocalNotificationService>(
+    () => LocalNotificationService(),
+  );
+  sl.registerLazySingleton<NotificationRouter>(() => NotificationRouter());
+  sl.registerLazySingleton<NotificationHandler>(
+    () => NotificationHandler(
+      notificationService: sl(),
+      localNotificationService: sl(),
+      notificationRouter: sl(),
+    ),
+  );
+  sl.registerLazySingleton<NotificationInitializer>(
+    () => NotificationInitializer(
+      notificationService: sl(),
+      notificationHandler: sl(),
+    ),
+  );
+
   // Repositories — register implementation against abstract interface
   sl.registerLazySingleton<AuthRepo>(() => AuthRepository(sl(), sl()));
   sl.registerLazySingleton<MovieRepository>(
     () => MovieRepositoryImpl(apiService: sl()),
   );
-  
+
   // Booking Feature
   sl.registerLazySingleton<BookingRemoteDataSource>(
     () => BookingRemoteDataSourceImpl(apiService: sl()),
@@ -68,11 +105,11 @@ Future<void> init() async {
 
   // ========== Profile Feature ==========
   sl.registerLazySingleton<ProfileRemoteDataSource>(
-    () => ProfileRemoteDataSourceImpl(apiService: sl()),
+    () => ProfileRemoteDataSourceImpl(apiService: sl(), tokenStorage: sl()),
   );
 
   sl.registerLazySingleton<ProfileRepository>(
-    () => ProfileRepository(remoteDataSource: sl()),
+    () => ProfileRepository(remoteDataSource: sl(), tokenStorage: sl()),
   );
 
   sl.registerFactory(() => ProfileCubit(repository: sl()));
