@@ -6,6 +6,7 @@ import 'package:project/core/notifications/notification_initializer.dart';
 import 'package:project/core/router/app_router.dart';
 import 'package:project/core/di/dependency_injection.dart' as di;
 import 'package:device_preview/device_preview.dart';
+import 'package:project/firebase_options.dart';
 
 // ---------------------------------------------------------------------------
 // FCM Background handler (must be a top-level function)
@@ -17,7 +18,7 @@ import 'package:device_preview/device_preview.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Firebase must be initialised in the background isolate as well.
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint('[FCM] Background message received: ${message.messageId}');
   // No local notification here — the OS shows the system notification
   // automatically for data-only messages with notification payload.
@@ -39,7 +40,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 1. Initialise Firebase
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // 2. Register the background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
