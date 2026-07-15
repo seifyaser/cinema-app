@@ -59,6 +59,7 @@ dependencies:
   flutter_paymob_sdk:
     git:
       url: https://github.com/PaymobAccept/flutter_sdk.git
+  flutter_svg: ^2.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -4,6 +4,7 @@ class TicketEntity extends Equatable {
   final String id;
   final String movieId;
   final String movieTitle;
+  final String? movieSubtitle;
   final String moviePoster;
   final String hallName;
   final String date;
@@ -13,11 +14,13 @@ class TicketEntity extends Equatable {
   final double totalPrice;
   final String status;
   final DateTime? expiresAt;
+  final List<String> selectedSeats;
 
   const TicketEntity({
     required this.id,
     required this.movieId,
     required this.movieTitle,
+    this.movieSubtitle,
     required this.moviePoster,
     required this.hallName,
     required this.date,
@@ -27,6 +30,7 @@ class TicketEntity extends Equatable {
     required this.totalPrice,
     required this.status,
     this.expiresAt,
+    this.selectedSeats = const [],
   });
 
   @override
@@ -34,6 +38,7 @@ class TicketEntity extends Equatable {
         id,
         movieId,
         movieTitle,
+        movieSubtitle,
         moviePoster,
         hallName,
         date,
@@ -43,5 +48,6 @@ class TicketEntity extends Equatable {
         totalPrice,
         status,
         expiresAt,
+        selectedSeats,
       ];
 }

@@ -5,7 +5,6 @@ import 'package:project/core/network/api_service.dart';
 import 'package:project/core/di/dependency_injection.dart';
 import 'package:project/core/payment/paymob_service.dart';
 import 'package:project/features/booking/presentation/widgets/liquid_glass_alert.dart';
-import 'package:project/features/home/domain/entities/movie_entity.dart';
 import 'package:project/features/home/presentation/widgets/liquid_glass_back_button.dart';
 import 'package:project/features/home/presentation/widgets/movie_details_background.dart';
 import 'package:project/features/booking/data/models/checkout_data_model.dart';

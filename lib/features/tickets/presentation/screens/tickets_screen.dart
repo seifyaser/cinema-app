@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project/features/booking/data/models/checkout_data_model.dart';
+import 'package:project/features/home/presentation/widgets/animated_movie_background.dart';
+import '../../domain/entities/ticket_entity.dart';
 import '../cubit/ticket_cubit.dart';
 import '../cubit/ticket_state.dart';
 import '../widgets/ticket_card.dart';
@@ -36,37 +38,54 @@ class _TicketsScreenState extends State<TicketsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF131313),
+      extendBodyBehindAppBar: true, // Lets the background bleed under the AppBar
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         title: const Text(
           "My Tickets",
           style: TextStyle(
             fontFamily: 'Sora',
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
+            fontSize: 18,
             color: Colors.white,
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: const Color(0xFFEAB308),
-          labelColor: const Color(0xFFEAB308),
-          unselectedLabelColor: Colors.white54,
-          labelStyle: const TextStyle(
-            fontFamily: 'Manrope',
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 48, vertical: 8),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF201F1F).withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              indicator: BoxDecoration(
+                color: const Color(0xFFEAB308),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              labelColor: const Color(0xFF131313), // dark text on gold
+              unselectedLabelColor: Colors.white70,
+              labelStyle: const TextStyle(
+                fontFamily: 'Manrope',
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontFamily: 'Manrope',
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+              tabs: const [
+                Tab(height: 36, text: "Active"),
+                Tab(height: 36, text: "Past"),
+              ],
+            ),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontFamily: 'Manrope',
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-          tabs: const [
-            Tab(text: "Active"),
-            Tab(text: "Past"),
-          ],
         ),
       ),
       body: BlocBuilder<TicketCubit, TicketState>(
@@ -88,25 +107,21 @@ class _TicketsScreenState extends State<TicketsScreen>
             );
           } else if (state is TicketLoaded) {
             final activeTickets = state.tickets
-                .where(
-                  (t) =>
-                      t.status.toLowerCase() != 'expired' &&
-                      t.status.toLowerCase() != 'cancelled',
-                )
+                .where((t) =>
+                    t.status.toLowerCase() != 'expired' &&
+                    t.status.toLowerCase() != 'cancelled')
                 .toList();
             final pastTickets = state.tickets
-                .where(
-                  (t) =>
-                      t.status.toLowerCase() == 'expired' ||
-                      t.status.toLowerCase() == 'cancelled',
-                )
+                .where((t) =>
+                    t.status.toLowerCase() == 'expired' ||
+                    t.status.toLowerCase() == 'cancelled')
                 .toList();
 
             return TabBarView(
               controller: _tabController,
               children: [
-                _buildTicketList(activeTickets, "No active tickets found."),
-                _buildTicketList(pastTickets, "No past tickets found."),
+                _buildRefreshableCarousel(activeTickets, "No active tickets found."),
+                _buildRefreshableCarousel(pastTickets, "No past tickets found."),
               ],
             );
           }
@@ -116,73 +131,200 @@ class _TicketsScreenState extends State<TicketsScreen>
     );
   }
 
-  Widget _buildTicketList(List tickets, String emptyMessage) {
-    Widget content;
-    if (tickets.isEmpty) {
-      content = ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.5,
-            child: Center(
-              child: Text(
-                emptyMessage,
-                style: const TextStyle(
-                  fontFamily: 'Manrope',
-                  color: Colors.white54,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    } else {
-      content = ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(20),
-        itemCount: tickets.length,
-        itemBuilder: (context, index) {
-          final ticket = tickets[index];
-          return TicketCard(
-            ticket: ticket,
-            onTap: () {
-              if (ticket.status.toLowerCase() == 'pending') {
-                final checkoutData = CheckoutDataModel(
-                  bookingId: ticket.id,
-                  expiresAt: ticket.expiresAt ?? DateTime.now(),
-                  movieId: ticket.movieId,
-                  movieTitle: ticket.movieTitle,
-                  moviePoster: ticket.moviePoster,
-                  hallId: '',
-                  hallName: ticket.hallName,
-                  date: ticket.date,
-                  startTime: ticket.startTime,
-                  endTime: ticket.endTime,
-                  seats: [],
-                  ticketPrice: ticket.totalSeats > 0
-                      ? ticket.totalPrice / ticket.totalSeats
-                      : 0,
-                  totalSeats: ticket.totalSeats,
-                  totalPrice: ticket.totalPrice,
-                );
-                context.push('/checkout', extra: checkoutData);
-              } else {
-                // Later: View Barcode / E-ticket details for confirmed tickets
-              }
-            },
-          );
-        },
-      );
-    }
-
+  Widget _buildRefreshableCarousel(List<TicketEntity> tickets, String emptyMessage) {
     return RefreshIndicator(
       color: const Color(0xFFEAB308),
       backgroundColor: const Color(0xFF2A2A2A),
       onRefresh: () async {
         await context.read<TicketCubit>().fetchMyTickets();
       },
-      child: content,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverFillRemaining(
+            child: TicketCarouselView(
+              tickets: tickets,
+              emptyMessage: emptyMessage,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TicketCarouselView extends StatefulWidget {
+  final List<TicketEntity> tickets;
+  final String emptyMessage;
+
+  const TicketCarouselView({
+    super.key,
+    required this.tickets,
+    required this.emptyMessage,
+  });
+
+  @override
+  State<TicketCarouselView> createState() => _TicketCarouselViewState();
+}
+
+class _TicketCarouselViewState extends State<TicketCarouselView> {
+  late PageController _pageController;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(viewportFraction: 0.75, initialPage: 0);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.tickets.isEmpty) {
+      return Center(
+        child: Text(
+          widget.emptyMessage,
+          style: const TextStyle(
+            fontFamily: 'Manrope',
+            color: Colors.white54,
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
+
+    // Protect against out of bounds if the list dynamically updates
+    final safeIndex = _currentIndex < widget.tickets.length ? _currentIndex : 0;
+    final currentTicket = widget.tickets[safeIndex];
+
+    return Stack(
+      children: [
+        // 1. Animated Blurred Movie Poster Background
+        AnimatedMovieBackground(
+          imageUrl: currentTicket.moviePoster,
+          animationKey: safeIndex,
+        ),
+
+        // 2. Foreground Content
+        SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 56), // Spacing below the AppBar
+
+              // Movie Title & Subtitle
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Column(
+                  key: ValueKey<String>(currentTicket.id),
+                  children: [
+                    Text(
+                      currentTicket.movieTitle.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    if (currentTicket.movieSubtitle != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        currentTicket.movieSubtitle!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Manrope',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Carousel of Tickets
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: widget.tickets.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                  itemBuilder: (context, index) {
+                    final ticket = widget.tickets[index];
+                    final isActive = index == _currentIndex;
+
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      margin: EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        top: isActive ? 0 : 40,
+                        bottom: isActive ? 0 : 40,
+                      ),
+                      child: TicketCard(
+                        ticket: ticket,
+                        isActive: isActive,
+                        onTap: () {
+                          if (!isActive) {
+                            _pageController.animateToPage(
+                              index,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                            );
+                          } else {
+                            if (ticket.status.toLowerCase() == 'pending') {
+                              // Use the user's provided logic for navigating to checkout
+                              final checkoutData = CheckoutDataModel(
+                                bookingId: ticket.id,
+                                expiresAt: DateTime.now(), // Fallback if missing
+                                movieId: ticket.movieId,
+                                movieTitle: ticket.movieTitle,
+                                moviePoster: ticket.moviePoster,
+                                hallId: '',
+                                hallName: ticket.hallName,
+                                date: ticket.date,
+                                startTime: ticket.startTime,
+                                endTime: ticket.endTime,
+                                seats: const [], // Provided as empty per user's checkout logic
+                                ticketPrice: ticket.totalSeats > 0
+                                    ? ticket.totalPrice / ticket.totalSeats
+                                    : 0,
+                                totalSeats: ticket.totalSeats,
+                                totalPrice: ticket.totalPrice,
+                              );
+                              context.push('/checkout', extra: checkoutData);
+                            } else {
+                              // View Barcode / E-ticket details for confirmed tickets
+                            }
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Space for bottom nav bar so it doesn't overlap content
+              const SizedBox(height: 100),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

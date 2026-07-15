@@ -13,6 +13,7 @@ class TicketModel extends TicketEntity {
     required super.totalSeats,
     required super.totalPrice,
     required super.status,
+    super.selectedSeats = const [],
     super.expiresAt,
   });
 
@@ -20,6 +21,8 @@ class TicketModel extends TicketEntity {
     final showtime = json['showtime'] ?? {};
     final movie = showtime['movie'] ?? {};
     final hall = showtime['hall'] ?? {};
+    final List<dynamic> seatsList = json['seats'] ?? [];
+    final selectedSeats = seatsList.map((s) => s['label'].toString()).toList();
 
     DateTime? parsedExpiresAt;
     if (json['expiresAt'] != null) {
@@ -38,6 +41,7 @@ class TicketModel extends TicketEntity {
       totalSeats: json['totalSeats'] ?? 0,
       totalPrice: (json['totalPrice'] ?? 0.0).toDouble(),
       status: json['status'] ?? 'unknown',
+      selectedSeats: selectedSeats,
       expiresAt: parsedExpiresAt,
     );
   }
@@ -55,6 +59,7 @@ class TicketModel extends TicketEntity {
       totalSeats: totalSeats,
       totalPrice: totalPrice,
       status: status,
+      selectedSeats: selectedSeats,
       expiresAt: expiresAt,
     );
   }

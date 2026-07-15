@@ -13,55 +13,62 @@ class AnimatedMovieBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      height: MediaQuery.of(context).size.height * 0.5,
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Positioned.fill(
+      bottom: screenHeight * 0.45,
       child: RepaintBoundary(
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // ImageFiltered wraps the crossfade so the blur is applied at the
-            // compositing stage. Duration reduced to 300ms (was 500ms) to shorten
-            // the window where two blurred images are composited simultaneously.
-            ImageFiltered(
-              imageFilter: ImageFilter.blur(
-                sigmaX: 8,
-                sigmaY: 8,
-                tileMode: TileMode.decal,
-              ),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              child: ImageFiltered(
+                key: ValueKey(animationKey),
+                imageFilter: ImageFilter.blur(
+                  sigmaX: 8,
+                  sigmaY: 8,
+                  tileMode: TileMode.decal,
+                ),
                 child: Image.network(
                   imageUrl,
-                  key: ValueKey(animationKey),
-                  width: double.infinity,
                   fit: BoxFit.cover,
                   alignment: Alignment.topCenter,
-                  // Constrain decoded texture size — avoids uploading a
-                  // full-res image to the GPU for a blurred background.
-                  cacheWidth: 480,
-                  cacheHeight: 400,
+                  width: double.infinity,
+                  cacheWidth: 720,
+                  filterQuality: FilterQuality.low,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return const ColoredBox(color: Colors.black);
+                  },
+                  errorBuilder: (_, __, ___) =>
+                      const ColoredBox(color: Colors.black),
                 ),
               ),
             ),
-            // Plain tint — no BackdropFilter.
-            const ColoredBox(color: Color(0x1FFFFFFF)),
+
+            // White tint
+            const ColoredBox(color: Color(0x15FFFFFF)),
+
+            // Bottom fade
             Positioned(
-              bottom: 0,
               left: 0,
               right: 0,
-              height: 150,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Theme.of(context).colorScheme.surface,
-                    ],
+              bottom: 0,
+              height: 180,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Theme.of(context).colorScheme.surface,
+                      ],
+                    ),
                   ),
                 ),
               ),
