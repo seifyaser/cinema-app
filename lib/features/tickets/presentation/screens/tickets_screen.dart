@@ -25,7 +25,7 @@ class _TicketsScreenState extends State<TicketsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -82,6 +82,7 @@ class _TicketsScreenState extends State<TicketsScreen>
               ),
               tabs: const [
                 Tab(height: 36, text: "Active"),
+                Tab(height: 36, text: "Pending"),
                 Tab(height: 36, text: "Past"),
               ],
             ),
@@ -107,9 +108,10 @@ class _TicketsScreenState extends State<TicketsScreen>
             );
           } else if (state is TicketLoaded) {
             final activeTickets = state.tickets
-                .where((t) =>
-                    t.status.toLowerCase() != 'expired' &&
-                    t.status.toLowerCase() != 'cancelled')
+                .where((t) => t.status.toLowerCase() == 'confirmed')
+                .toList();
+            final pendingTickets = state.tickets
+                .where((t) => t.status.toLowerCase() == 'pending')
                 .toList();
             final pastTickets = state.tickets
                 .where((t) =>
@@ -121,6 +123,7 @@ class _TicketsScreenState extends State<TicketsScreen>
               controller: _tabController,
               children: [
                 _buildRefreshableCarousel(activeTickets, "No active tickets found."),
+                _buildRefreshableCarousel(pendingTickets, "No pending tickets. Quick, go book a movie!"),
                 _buildRefreshableCarousel(pastTickets, "No past tickets found."),
               ],
             );
@@ -291,7 +294,9 @@ class _TicketCarouselViewState extends State<TicketCarouselView> {
                               // Use the user's provided logic for navigating to checkout
                               final checkoutData = CheckoutDataModel(
                                 bookingId: ticket.id,
-                                expiresAt: DateTime.now(), // Fallback if missing
+                                expiresAt: ticket.expiresAt ??
+                                    DateTime.now()
+                                        .add(const Duration(minutes: 5)),
                                 movieId: ticket.movieId,
                                 movieTitle: ticket.movieTitle,
                                 moviePoster: ticket.moviePoster,
@@ -300,7 +305,13 @@ class _TicketCarouselViewState extends State<TicketCarouselView> {
                                 date: ticket.date,
                                 startTime: ticket.startTime,
                                 endTime: ticket.endTime,
-                                seats: const [], // Provided as empty per user's checkout logic
+                                seats: ticket.selectedSeats
+                                    .map((label) => CheckoutSeatModel(
+                                          seatId: '',
+                                          label: label,
+                                          type: 'standard',
+                                        ))
+                                    .toList(),
                                 ticketPrice: ticket.totalSeats > 0
                                     ? ticket.totalPrice / ticket.totalSeats
                                     : 0,
