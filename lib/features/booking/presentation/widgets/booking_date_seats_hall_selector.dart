@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/hall_entity.dart';
+import '../../data/models/hall_model.dart';
 import 'glass_chip.dart';
 
 class BookingDateHallSelector extends StatelessWidget {
@@ -8,9 +8,9 @@ class BookingDateHallSelector extends StatelessWidget {
   final int selectedDateIndex;
   final int numberOfSeats;
   final ValueChanged<String>? onDateSelected;
-  final List<HallEntity> halls;
-  final HallEntity? selectedHall;
-  final ValueChanged<HallEntity>? onHallSelected;
+  final List<HallModel> halls;
+  final HallModel? selectedHall;
+  final ValueChanged<HallModel>? onHallSelected;
 
   const BookingDateHallSelector({
     super.key,
@@ -108,7 +108,7 @@ class BookingDateHallSelector extends StatelessWidget {
             if (halls.isNotEmpty) ...[
               const SizedBox(width: 16),
               // Hall Picker Chip
-              PopupMenuButton<HallEntity>(
+              PopupMenuButton<HallModel>(
                 offset: const Offset(0, 40),
                 color: const Color(0xFF131313),
                 shape: RoundedRectangleBorder(
@@ -119,7 +119,7 @@ class BookingDateHallSelector extends StatelessWidget {
                 itemBuilder: (context) {
                   return halls.map((hall) {
                     final isSelected = selectedHall?.id == hall.id;
-                    return PopupMenuItem<HallEntity>(
+                    return PopupMenuItem<HallModel>(
                       value: hall,
                       child: Row(
                         children: [

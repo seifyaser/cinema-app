@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project/features/booking/data/repositories/booking_repository_impl.dart';
-import '../../domain/entities/showtime_entity.dart';
-import '../../domain/entities/hall_entity.dart';
+import '../../data/models/showtime_model.dart';
+import '../../data/models/hall_model.dart';
 import '../../data/models/hold_seats_request.dart';
 import 'booking_state.dart';
 import 'seat_status.dart';
@@ -13,9 +13,9 @@ class BookingCubit extends Cubit<BookingState> {
   BookingCubit({
     required BookingRepository bookingRepository,
     required this.movieId,
-  })  : _bookingRepository = bookingRepository,
-        super(BookingInitial());
-        
+  }) : _bookingRepository = bookingRepository,
+       super(BookingInitial());
+
   static const int maxSelectedSeats = 10;
 
   Future<void> fetchAvailableDates() async {
@@ -24,21 +24,24 @@ class BookingCubit extends Cubit<BookingState> {
     final result = await _bookingRepository.getAvailableDates(movieId);
 
     result.fold(
-      (failure) => emit(BookingError(type: failure.type, message: failure.message)),
+      (failure) =>
+          emit(BookingError(type: failure.type, message: failure.message)),
       (dates) {
-        emit(BookingLoaded(
-          availableDates: dates,
-          selectedDate: dates.isNotEmpty ? dates.first : null,
-          showtimes: const [],
-          selectedShowtime: null,
-          isLoadingShowtimes: dates.isNotEmpty,
-          availableHalls: const [],
-          selectedHall: null,
-          isLoadingHalls: dates.isNotEmpty,
-          seats: const [],
-          selectedSeatsCount: 0,
-        ));
-        
+        emit(
+          BookingLoaded(
+            availableDates: dates,
+            selectedDate: dates.isNotEmpty ? dates.first : null,
+            showtimes: const [],
+            selectedShowtime: null,
+            isLoadingShowtimes: dates.isNotEmpty,
+            availableHalls: const [],
+            selectedHall: null,
+            isLoadingHalls: dates.isNotEmpty,
+            seats: const [],
+            selectedSeatsCount: 0,
+          ),
+        );
+
         if (dates.isNotEmpty) {
           fetchShowtimes(dates.first);
           fetchAvailableHalls(dates.first);
@@ -50,11 +53,13 @@ class BookingCubit extends Cubit<BookingState> {
   Future<void> fetchShowtimes(String date) async {
     if (state is BookingLoaded) {
       final currentState = state as BookingLoaded;
-      emit(currentState.copyWith(
-        isLoadingShowtimes: true,
-        showtimes: const [],
-        selectedShowtime: null,
-      ));
+      emit(
+        currentState.copyWith(
+          isLoadingShowtimes: true,
+          showtimes: const [],
+          selectedShowtime: null,
+        ),
+      );
     }
 
     final result = await _bookingRepository.getShowtimes(movieId, date);
@@ -64,18 +69,22 @@ class BookingCubit extends Cubit<BookingState> {
         emit(BookingError(type: failure.type, message: failure.message));
       },
       (showtimes) {
-          if (state is BookingLoaded) {
-            final currentState = state as BookingLoaded;
-            final selectedShowtime = showtimes.isNotEmpty ? showtimes.first : null;
-            emit(currentState.copyWith(
+        if (state is BookingLoaded) {
+          final currentState = state as BookingLoaded;
+          final selectedShowtime = showtimes.isNotEmpty
+              ? showtimes.first
+              : null;
+          emit(
+            currentState.copyWith(
               isLoadingShowtimes: false,
               showtimes: showtimes,
               selectedShowtime: selectedShowtime,
-            ));
-            if (selectedShowtime != null) {
-              fetchSeatMap(selectedShowtime.id);
-            }
+            ),
+          );
+          if (selectedShowtime != null) {
+            fetchSeatMap(selectedShowtime.id);
           }
+        }
       },
     );
   }
@@ -83,11 +92,13 @@ class BookingCubit extends Cubit<BookingState> {
   Future<void> fetchAvailableHalls(String date) async {
     if (state is BookingLoaded) {
       final currentState = state as BookingLoaded;
-      emit(currentState.copyWith(
-        isLoadingHalls: true,
-        availableHalls: const [],
-        selectedHall: null,
-      ));
+      emit(
+        currentState.copyWith(
+          isLoadingHalls: true,
+          availableHalls: const [],
+          selectedHall: null,
+        ),
+      );
     }
 
     final result = await _bookingRepository.getAvailableHalls(movieId, date);
@@ -100,22 +111,27 @@ class BookingCubit extends Cubit<BookingState> {
         if (state is BookingLoaded) {
           final currentState = state as BookingLoaded;
           final selectedHall = halls.isNotEmpty ? halls.first : null;
-          
+
           List<List<SeatStatus>> initialSeats = [];
           if (selectedHall != null) {
             initialSeats = List.generate(
               selectedHall.totalRows,
-              (_) => List.generate(selectedHall.totalColumns, (_) => SeatStatus.aisle),
+              (_) => List.generate(
+                selectedHall.totalColumns,
+                (_) => SeatStatus.aisle,
+              ),
             );
           }
-          
-          emit(currentState.copyWith(
-            isLoadingHalls: false,
-            availableHalls: halls,
-            selectedHall: selectedHall,
-            seats: initialSeats,
-            selectedSeatsCount: 0,
-          ));
+
+          emit(
+            currentState.copyWith(
+              isLoadingHalls: false,
+              availableHalls: halls,
+              selectedHall: selectedHall,
+              seats: initialSeats,
+              selectedSeatsCount: 0,
+            ),
+          );
         }
       },
     );
@@ -131,7 +147,7 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-  void selectShowtime(ShowtimeEntity showtime) {
+  void selectShowtime(ShowtimeModel showtime) {
     if (state is BookingLoaded) {
       final currentState = state as BookingLoaded;
       emit(currentState.copyWith(selectedShowtime: showtime));
@@ -151,27 +167,31 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-  void selectHall(HallEntity hall) {
+  void selectHall(HallModel hall) {
     if (state is BookingLoaded) {
       final currentState = state as BookingLoaded;
-      
+
       final initialSeats = List.generate(
         hall.totalRows,
         (_) => List.generate(hall.totalColumns, (_) => SeatStatus.aisle),
       );
-      
+
       final validShowtimes = currentState.showtimes
           .where((s) => s.hallName == hall.displayName)
           .toList();
-      
-      final newSelectedShowtime = validShowtimes.isNotEmpty ? validShowtimes.first : null;
 
-      emit(currentState.copyWith(
-        selectedHall: hall,
-        seats: initialSeats,
-        selectedSeatsCount: 0,
-        selectedShowtime: newSelectedShowtime,
-      ));
+      final newSelectedShowtime = validShowtimes.isNotEmpty
+          ? validShowtimes.first
+          : null;
+
+      emit(
+        currentState.copyWith(
+          selectedHall: hall,
+          seats: initialSeats,
+          selectedSeatsCount: 0,
+          selectedShowtime: newSelectedShowtime,
+        ),
+      );
 
       if (newSelectedShowtime != null) {
         fetchSeatMap(newSelectedShowtime.id);
@@ -183,9 +203,9 @@ class BookingCubit extends Cubit<BookingState> {
     if (state is BookingLoaded) {
       final currentState = state as BookingLoaded;
       emit(currentState.copyWith(isLoadingSeats: true));
-      
+
       final result = await _bookingRepository.getSeatMap(showtimeId);
-      
+
       result.fold(
         (failure) {
           emit(BookingError(type: failure.type, message: failure.message));
@@ -194,34 +214,42 @@ class BookingCubit extends Cubit<BookingState> {
           if (state is BookingLoaded) {
             final currentState = state as BookingLoaded;
             final currentHall = currentState.selectedHall;
-            
+
             if (currentHall != null) {
               final newSeats = List.generate(
                 currentHall.totalRows,
-                (_) => List.generate(currentHall.totalColumns, (_) => SeatStatus.aisle),
+                (_) => List.generate(
+                  currentHall.totalColumns,
+                  (_) => SeatStatus.aisle,
+                ),
               );
 
               for (final seatModel in seatModels) {
-                final rowIndex = seatModel.row.codeUnitAt(0) - 'A'.codeUnitAt(0);
+                final rowIndex =
+                    seatModel.row.codeUnitAt(0) - 'A'.codeUnitAt(0);
                 final colIndex = seatModel.number - 1;
 
-                if (rowIndex >= 0 && rowIndex < currentHall.totalRows &&
-                    colIndex >= 0 && colIndex < currentHall.totalColumns) {
-                  
+                if (rowIndex >= 0 &&
+                    rowIndex < currentHall.totalRows &&
+                    colIndex >= 0 &&
+                    colIndex < currentHall.totalColumns) {
                   if (seatModel.status == 'available') {
                     newSeats[rowIndex][colIndex] = SeatStatus.available;
-                  } else if (seatModel.status == 'held' || seatModel.status == 'reserved') {
+                  } else if (seatModel.status == 'held' ||
+                      seatModel.status == 'reserved') {
                     newSeats[rowIndex][colIndex] = SeatStatus.occupied;
                   }
                 }
               }
 
-              emit(currentState.copyWith(
-                isLoadingSeats: false,
-                seats: newSeats,
-                seatModels: seatModels,
-                selectedSeatsCount: 0,
-              ));
+              emit(
+                currentState.copyWith(
+                  isLoadingSeats: false,
+                  seats: newSeats,
+                  seatModels: seatModels,
+                  selectedSeatsCount: 0,
+                ),
+              );
             }
           }
         },
@@ -232,21 +260,25 @@ class BookingCubit extends Cubit<BookingState> {
   void toggleSeat(int row, int col) {
     if (state is BookingLoaded) {
       final currentState = state as BookingLoaded;
-      
-      if (row < 0 || row >= currentState.seats.length ||
-          col < 0 || col >= currentState.seats[row].length) {
+
+      if (row < 0 ||
+          row >= currentState.seats.length ||
+          col < 0 ||
+          col >= currentState.seats[row].length) {
         return;
       }
-      
+
       final currentSeatStatus = currentState.seats[row][col];
-      
-      if (currentSeatStatus == SeatStatus.aisle || currentSeatStatus == SeatStatus.occupied) {
+
+      if (currentSeatStatus == SeatStatus.aisle ||
+          currentSeatStatus == SeatStatus.occupied) {
         return;
       }
 
       final isCurrentlySelected = currentSeatStatus == SeatStatus.selected;
 
-      if (!isCurrentlySelected && currentState.selectedSeatsCount >= maxSelectedSeats) {
+      if (!isCurrentlySelected &&
+          currentState.selectedSeatsCount >= maxSelectedSeats) {
         return;
       }
 
@@ -256,16 +288,20 @@ class BookingCubit extends Cubit<BookingState> {
 
       if (isCurrentlySelected) {
         newSeats[row][col] = SeatStatus.available;
-        emit(currentState.copyWith(
-          seats: newSeats,
-          selectedSeatsCount: currentState.selectedSeatsCount - 1,
-        ));
+        emit(
+          currentState.copyWith(
+            seats: newSeats,
+            selectedSeatsCount: currentState.selectedSeatsCount - 1,
+          ),
+        );
       } else {
         newSeats[row][col] = SeatStatus.selected;
-        emit(currentState.copyWith(
-          seats: newSeats,
-          selectedSeatsCount: currentState.selectedSeatsCount + 1,
-        ));
+        emit(
+          currentState.copyWith(
+            seats: newSeats,
+            selectedSeatsCount: currentState.selectedSeatsCount + 1,
+          ),
+        );
       }
     }
   }
@@ -273,15 +309,18 @@ class BookingCubit extends Cubit<BookingState> {
   Future<void> holdSeats() async {
     if (state is BookingLoaded) {
       final currentState = state as BookingLoaded;
-      
-      if (currentState.selectedShowtime == null || currentState.selectedSeatsCount == 0) {
+
+      if (currentState.selectedShowtime == null ||
+          currentState.selectedSeatsCount == 0) {
         return;
       }
 
-      emit(currentState.copyWith(
-        actionStatus: ActionStatus.holding,
-        holdFailureMessage: null,
-      ));
+      emit(
+        currentState.copyWith(
+          actionStatus: ActionStatus.holding,
+          holdFailureMessage: null,
+        ),
+      );
 
       final List<String> selectedSeatIds = [];
 
@@ -290,7 +329,7 @@ class BookingCubit extends Cubit<BookingState> {
           if (currentState.seats[r][c] == SeatStatus.selected) {
             final rowLabel = String.fromCharCode('A'.codeUnitAt(0) + r);
             final colNumber = c + 1;
-            
+
             try {
               final seatModel = currentState.seatModels.firstWhere(
                 (s) => s.row == rowLabel && s.number == colNumber,
@@ -304,10 +343,12 @@ class BookingCubit extends Cubit<BookingState> {
       }
 
       if (selectedSeatIds.isEmpty) {
-        emit(currentState.copyWith(
-          actionStatus: ActionStatus.holdFailure,
-          holdFailureMessage: 'Could not identify selected seats.',
-        ));
+        emit(
+          currentState.copyWith(
+            actionStatus: ActionStatus.holdFailure,
+            holdFailureMessage: 'Could not identify selected seats.',
+          ),
+        );
         return;
       }
 
@@ -320,16 +361,20 @@ class BookingCubit extends Cubit<BookingState> {
 
       result.fold(
         (failure) {
-          emit(currentState.copyWith(
-            actionStatus: ActionStatus.holdFailure,
-            holdFailureMessage: failure.message,
-          ));
+          emit(
+            currentState.copyWith(
+              actionStatus: ActionStatus.holdFailure,
+              holdFailureMessage: failure.message,
+            ),
+          );
         },
         (responseData) {
-          emit(currentState.copyWith(
-            actionStatus: ActionStatus.holdSuccess,
-            holdResponseData: responseData,
-          ));
+          emit(
+            currentState.copyWith(
+              actionStatus: ActionStatus.holdSuccess,
+              holdResponseData: responseData,
+            ),
+          );
         },
       );
     }

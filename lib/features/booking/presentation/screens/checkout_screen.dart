@@ -123,7 +123,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
               ),
               SizedBox(width: 16),
               Text('Verifying payment...'),
@@ -137,13 +140,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Step 3: Poll the backend for the REAL payment status (updated by the webhook)
       bool isConfirmed = false;
       int attempts = 0;
-      const maxAttempts = 15; // 15 * 2 = 30 seconds max wait time
+      const maxAttempts = 3; // 3 * 2 = 6 seconds max wait time
 
       debugPrint('[Payment] Starting to poll backend for webhook updates...');
 
       while (attempts < maxAttempts) {
         if (!mounted) return;
-        
+
         try {
           final statusResponse = await apiService.get<Map<String, dynamic>>(
             'payments/booking/${widget.bookingData.bookingId}',
@@ -154,7 +157,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               statusBody['data'] as Map<String, dynamic>? ?? statusBody;
           final paymentStatus = statusData['status']?.toString() ?? '';
 
-          debugPrint('[Payment Poll attempt ${attempts + 1}] Backend returned status: $paymentStatus');
+          debugPrint(
+            '[Payment Poll attempt ${attempts + 1}] Backend returned status: $paymentStatus',
+          );
 
           if (paymentStatus == 'paid') {
             debugPrint('[Payment] Webhook successfully confirmed payment!');
@@ -189,13 +194,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         debugPrint('[Payment] Failure/Pending Flow Triggered');
         // If the webhook never arrived or the payment failed
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(
+          SnackBar(
             content: Text(
-              result.isSuccessful 
-                ? '⏳ Payment is processing. Please check your tickets shortly.' 
-                : '❌ Payment failed or was cancelled.',
+              result.isSuccessful
+                  ? '⏳ Payment is processing. Please check your tickets shortly.'
+                  : '❌ Payment failed or was cancelled.',
             ),
-            backgroundColor: result.isSuccessful ? Colors.orange : Colors.redAccent,
+            backgroundColor: result.isSuccessful
+                ? Colors.orange
+                : Colors.redAccent,
             duration: const Duration(seconds: 5),
           ),
         );
@@ -239,21 +246,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         children: [
           Container(color: const Color.fromARGB(255, 0, 0, 0)),
 
-          MovieDetailsBackground(
-            movie: MovieEntity(
-              id: widget.bookingData.movieId,
-              title: widget.bookingData.movieTitle,
-              director: 'Unknown',
-              year: 2026,
-              gradientColors: const [0xFF000000, 0xFF000000],
-              duration: '120m',
-              type: 'Action',
-              imageurl: widget.bookingData.moviePoster,
-              trailerUrl: '',
-              description: '',
-              actors: const [],
-            ),
-          ),
+          MovieDetailsBackground(posterUrl: widget.bookingData.moviePoster),
 
           SafeArea(
             child: SingleChildScrollView(

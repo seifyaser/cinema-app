@@ -52,7 +52,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
             final movie = state.movie;
             return Stack(
               children: [
-                MovieDetailsBackground(movie: movie),
+                MovieDetailsBackground(posterUrl: movie.imageurl),
                 SafeArea(
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),

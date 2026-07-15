@@ -5,22 +5,26 @@ import 'package:project/core/error/failure.dart';
 import 'package:project/core/error/failure_type.dart';
 import 'package:project/features/booking/data/models/checkout_data_model.dart';
 
-import '../../domain/entities/showtime_entity.dart';
-import '../../domain/entities/hall_entity.dart';
 import '../datasources/booking_remote_data_source.dart';
+import '../models/hall_model.dart';
 import '../models/showtime_model.dart';
 import '../models/seat_model.dart';
 import '../models/hold_seats_request.dart';
 
 abstract class BookingRepository {
   Future<Either<Failure, List<String>>> getAvailableDates(String movieId);
-  Future<Either<Failure, List<HallEntity>>> getAvailableHalls(String movieId, String date);
-  Future<Either<Failure, List<ShowtimeEntity>>> getShowtimes(
+  Future<Either<Failure, List<HallModel>>> getAvailableHalls(
+    String movieId,
+    String date,
+  );
+  Future<Either<Failure, List<ShowtimeModel>>> getShowtimes(
     String movieId,
     String date,
   );
   Future<Either<Failure, List<SeatModel>>> getSeatMap(String showtimeId);
-  Future<Either<Failure, CheckoutDataModel>> holdSeats(HoldSeatsRequest request);
+  Future<Either<Failure, CheckoutDataModel>> holdSeats(
+    HoldSeatsRequest request,
+  );
 }
 
 class BookingRepositoryImpl implements BookingRepository {
@@ -49,7 +53,7 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, List<HallEntity>>> getAvailableHalls(
+  Future<Either<Failure, List<HallModel>>> getAvailableHalls(
     String movieId,
     String date,
   ) async {
@@ -58,10 +62,7 @@ class BookingRepositoryImpl implements BookingRepository {
         movieId,
         date,
       );
-      final hallEntities = hallModels
-          .map((model) => model.toEntity())
-          .toList();
-      return Right(hallEntities);
+      return Right(hallModels);
     } on DioException catch (e) {
       return Left(e.toFailure());
     } catch (e) {
@@ -75,7 +76,7 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, List<ShowtimeEntity>>> getShowtimes(
+  Future<Either<Failure, List<ShowtimeModel>>> getShowtimes(
     String movieId,
     String date,
   ) async {
@@ -84,10 +85,7 @@ class BookingRepositoryImpl implements BookingRepository {
         movieId,
         date,
       );
-      final showtimeEntities = showtimeModels
-          .map((model) => model.toEntity())
-          .toList();
-      return Right(showtimeEntities);
+      return Right(showtimeModels);
     } on DioException catch (e) {
       return Left(e.toFailure());
     } catch (e) {
@@ -118,7 +116,9 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<Either<Failure, CheckoutDataModel>> holdSeats(HoldSeatsRequest request) async {
+  Future<Either<Failure, CheckoutDataModel>> holdSeats(
+    HoldSeatsRequest request,
+  ) async {
     try {
       final response = await _remoteDataSource.holdSeats(request);
       final model = CheckoutDataModel.fromJson(response);

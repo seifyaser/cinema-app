@@ -1,5 +1,3 @@
-import '../../domain/entities/hall_entity.dart';
-
 class ScreenTypeModel {
   final String key;
   final String displayName;
@@ -15,19 +13,10 @@ class ScreenTypeModel {
 
   factory ScreenTypeModel.fromJson(Map<String, dynamic> json) {
     return ScreenTypeModel(
-      key: json['key'] ?? '',
-      displayName: json['displayName'] ?? '',
-      icon: json['icon'] ?? '',
-      description: json['description'] ?? '',
-    );
-  }
-
-  ScreenTypeEntity toEntity() {
-    return ScreenTypeEntity(
-      key: key,
-      displayName: displayName,
-      icon: icon,
-      description: description,
+      key: json['key'] as String? ?? '',
+      displayName: json['displayName'] as String? ?? '',
+      icon: json['icon'] as String? ?? '',
+      description: json['description'] as String? ?? '',
     );
   }
 }
@@ -51,23 +40,14 @@ class HallModel {
 
   factory HallModel.fromJson(Map<String, dynamic> json) {
     return HallModel(
-      id: json['id'] ?? json['_id'] ?? '',
-      displayName: json['displayName'] ?? '',
-      screenType: ScreenTypeModel.fromJson(json['screenType'] ?? {}),
-      totalRows: json['totalRows'] ?? 0,
-      totalColumns: json['totalColumns'] ?? 0,
-      totalSeats: json['totalSeats'] ?? 0,
-    );
-  }
-
-  HallEntity toEntity() {
-    return HallEntity(
-      id: id,
-      displayName: displayName,
-      screenType: screenType.toEntity(),
-      totalRows: totalRows,
-      totalColumns: totalColumns,
-      totalSeats: totalSeats,
+      id: json['id'] as String? ?? json['_id'] as String? ?? '',
+      displayName: json['displayName'] as String? ?? '',
+      screenType: ScreenTypeModel.fromJson(
+        json['screenType'] as Map<String, dynamic>? ?? {},
+      ),
+      totalRows: json['totalRows'] as int? ?? 0,
+      totalColumns: json['totalColumns'] as int? ?? 0,
+      totalSeats: json['totalSeats'] as int? ?? 0,
     );
   }
 }

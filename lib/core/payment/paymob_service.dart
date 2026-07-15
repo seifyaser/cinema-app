@@ -15,15 +15,26 @@ class PaymobService {
     final result = await _sdkService.payWithPaymob(
       publicKey: 'egy_pk_test_fO4LnfA1Q767OMJlnTSz5gAJ0ChavYVg',
       clientSecret: clientSecret,
+
       customization: paymob_sdk.PaymobCustomization(
         appName: appName,
         buttonBackgroundColor: buttonBackgroundColor,
         buttonTextColor: buttonTextColor,
-        showSaveCard: false,
-        saveCardDefault: false,
-        showTransactionResult: false,
+        showSaveCard: true,
+        saveCardDefault: true,
+        showTransactionResult: true,
       ),
     );
+    debugPrint('''
+=========================
+Paymob Result
+status: ${result.status}
+success: ${result.isSuccessful}
+error: ${result.errorMessage}
+details: ${result.transactionDetails}
+debugPrint('isSuccessful: ${result.isSuccessful}');
+=========================
+''');
 
     return result;
   }

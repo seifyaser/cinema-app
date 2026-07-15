@@ -34,7 +34,7 @@ class ApiService {
   final TokenStorage _tokenStorage;
 
   static const String baseUrl =
-      'https://relay-experts-cartoons-process.trycloudflare.com/api/v1/';
+      'https://adware-devon-showtimes-somebody.trycloudflare.com/api/v1/';
 
   // ---------------------------------------------------------------------------
   // Public HTTP methods

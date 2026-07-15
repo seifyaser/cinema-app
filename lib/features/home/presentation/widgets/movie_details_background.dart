@@ -1,11 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:project/features/home/domain/entities/movie_entity.dart';
 
 class MovieDetailsBackground extends StatelessWidget {
-  const MovieDetailsBackground({super.key, required this.movie});
+  const MovieDetailsBackground({super.key, required this.posterUrl});
 
-  final MovieEntity movie;
+  final String posterUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +19,7 @@ class MovieDetailsBackground extends StatelessWidget {
               tileMode: TileMode.decal,
             ),
             child: Image.network(
-              movie.imageurl,
+              posterUrl,
               fit: BoxFit.cover,
               cacheWidth: 300,
               cacheHeight: 400,

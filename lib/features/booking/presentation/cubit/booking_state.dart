@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:project/core/error/failure_type.dart';
-import '../../domain/entities/showtime_entity.dart';
-import '../../domain/entities/hall_entity.dart';
+import '../../data/models/showtime_model.dart';
+import '../../data/models/hall_model.dart';
 import '../../data/models/seat_model.dart';
 import '../../data/models/checkout_data_model.dart';
 import 'seat_status.dart';
@@ -22,12 +22,12 @@ class BookingLoading extends BookingState {}
 class BookingLoaded extends BookingState {
   final List<String> availableDates;
   final String? selectedDate;
-  final List<ShowtimeEntity> showtimes;
-  final ShowtimeEntity? selectedShowtime;
+  final List<ShowtimeModel> showtimes;
+  final ShowtimeModel? selectedShowtime;
   final bool isLoadingShowtimes;
-  
-  final List<HallEntity> availableHalls;
-  final HallEntity? selectedHall;
+
+  final List<HallModel> availableHalls;
+  final HallModel? selectedHall;
   final bool isLoadingHalls;
 
   final List<List<SeatStatus>> seats;
@@ -60,11 +60,11 @@ class BookingLoaded extends BookingState {
   BookingLoaded copyWith({
     List<String>? availableDates,
     String? selectedDate,
-    List<ShowtimeEntity>? showtimes,
-    ShowtimeEntity? selectedShowtime,
+    List<ShowtimeModel>? showtimes,
+    ShowtimeModel? selectedShowtime,
     bool? isLoadingShowtimes,
-    List<HallEntity>? availableHalls,
-    HallEntity? selectedHall,
+    List<HallModel>? availableHalls,
+    HallModel? selectedHall,
     bool? isLoadingHalls,
     List<List<SeatStatus>>? seats,
     List<SeatModel>? seatModels,
@@ -95,22 +95,22 @@ class BookingLoaded extends BookingState {
 
   @override
   List<Object?> get props => [
-        availableDates,
-        selectedDate,
-        showtimes,
-        selectedShowtime,
-        isLoadingShowtimes,
-        availableHalls,
-        selectedHall,
-        isLoadingHalls,
-        seats,
-        seatModels,
-        selectedSeatsCount,
-        isLoadingSeats,
-        actionStatus,
-        holdFailureMessage,
-        holdResponseData,
-      ];
+    availableDates,
+    selectedDate,
+    showtimes,
+    selectedShowtime,
+    isLoadingShowtimes,
+    availableHalls,
+    selectedHall,
+    isLoadingHalls,
+    seats,
+    seatModels,
+    selectedSeatsCount,
+    isLoadingSeats,
+    actionStatus,
+    holdFailureMessage,
+    holdResponseData,
+  ];
 }
 
 class BookingError extends BookingState {
@@ -119,6 +119,7 @@ class BookingError extends BookingState {
 
   const BookingError({required this.type, required this.message});
 
+  @override
   @override
   List<Object?> get props => [type, message];
 }

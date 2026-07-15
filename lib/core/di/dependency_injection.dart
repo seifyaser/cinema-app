@@ -52,7 +52,8 @@ Future<void> init({GlobalKey<NavigatorState>? navigatorKey}) async {
     () => LocalNotificationService(
       channelId: 'cinema_channel',
       channelName: 'Cinema Notifications',
-      channelDescription: 'Notifications for new movies, bookings, and updates.',
+      channelDescription:
+          'Notifications for new movies, bookings, and updates.',
     ),
   );
   // App-specific router — not in the package
@@ -61,7 +62,8 @@ Future<void> init({GlobalKey<NavigatorState>? navigatorKey}) async {
     () => NotificationHandler(
       notificationService: sl(),
       localNotificationService: sl(),
-      onNavigate: (context, data) => sl<NotificationRouter>().route(context, data),
+      onNavigate: (context, data) =>
+          sl<NotificationRouter>().route(context, data),
     ),
   );
   sl.registerLazySingleton<NotificationInitializer>(
@@ -88,7 +90,9 @@ Future<void> init({GlobalKey<NavigatorState>? navigatorKey}) async {
   // Cubits
   sl.registerFactory<AuthCubit>(() => AuthCubit(authRepository: sl()));
   sl.registerFactory<HomeCubit>(() => HomeCubit(movieRepository: sl()));
-  sl.registerFactory<MovieDetailsCubit>(() => MovieDetailsCubit(movieRepository: sl()));
+  sl.registerFactory<MovieDetailsCubit>(
+    () => MovieDetailsCubit(movieRepository: sl()),
+  );
   sl.registerFactoryParam<BookingCubit, String, dynamic>(
     (movieId, _) => BookingCubit(bookingRepository: sl(), movieId: movieId),
   );
@@ -115,10 +119,9 @@ Future<void> init({GlobalKey<NavigatorState>? navigatorKey}) async {
     () => ProfileRepository(remoteDataSource: sl(), tokenStorage: sl()),
   );
 
-  sl.registerFactory(() => ProfileCubit(
-    repository: sl(),
-    notificationRepository: sl(),
-  ));
+  sl.registerFactory(
+    () => ProfileCubit(repository: sl(), notificationRepository: sl()),
+  );
 
   // ========== Search Feature ==========
   sl.registerFactory(() => SearchCubit(movieRepository: sl()));
