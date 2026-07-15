@@ -6,6 +6,8 @@ import '../cubit/ticket_cubit.dart';
 import '../cubit/ticket_state.dart';
 import '../widgets/ticket_card.dart';
 import 'package:project/core/widgets/failure_widget.dart';
+import 'package:project/core/router/app_router.dart';
+import 'package:project/core/error/failure_type.dart';
 
 class TicketsScreen extends StatefulWidget {
   const TicketsScreen({super.key});
@@ -74,10 +76,15 @@ class _TicketsScreenState extends State<TicketsScreen>
               child: CircularProgressIndicator(color: Color(0xFFEAB308)),
             );
           } else if (state is TicketError) {
+            final isUnauthorized = state.type == FailureType.unauthorized;
             return FailureWidget(
               type: state.type,
               message: state.message,
-              onRetry: () => context.read<TicketCubit>().fetchMyTickets(),
+              onRetry: isUnauthorized
+                  ? () => context.go(AppRouter.loginRoute)
+                  : () => context.read<TicketCubit>().fetchMyTickets(),
+              buttonText: isUnauthorized ? "Go to Sign In" : null,
+              buttonIcon: isUnauthorized ? Icons.login : null,
             );
           } else if (state is TicketLoaded) {
             final activeTickets = state.tickets

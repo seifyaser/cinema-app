@@ -102,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       animationKey: _cinemaIndex,
                     ),
                     SafeArea(
+                      bottom: false,
                       child: Padding(
                         padding: const EdgeInsets.only(top: 20.0),
                         child: Stack(

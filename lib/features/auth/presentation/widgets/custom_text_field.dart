@@ -2,21 +2,27 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
-  final String label;
-  final String hintText;
+  final String? label;
+  final String? hintText;
   final bool obscureText;
   final Widget? suffixIcon;
   final TextEditingController? controller;
   final bool enabled;
+  final ValueChanged<String>? onChanged;
+  final TextStyle? style;
+  final InputDecoration? decoration;
 
   const CustomTextField({
     super.key,
-    required this.label,
-    required this.hintText,
+    this.label,
+    this.hintText,
     this.obscureText = false,
     this.suffixIcon,
     this.controller,
     this.enabled = true,
+    this.onChanged,
+    this.style,
+    this.decoration,
   });
 
   @override
@@ -25,26 +31,29 @@ class CustomTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: colorScheme.onSurfaceVariant,
-            fontFamily: GoogleFonts.manrope().fontFamily,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.8,
-            fontSize: 12,
+        if (label != null) ...[
+          Text(
+            label!,
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontFamily: GoogleFonts.manrope().fontFamily,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.8,
+              fontSize: 12,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
+          const SizedBox(height: 12),
+        ],
         TextFormField(
           controller: controller,
           enabled: enabled,
+          onChanged: onChanged,
           onTapOutside: (_) {
             FocusScope.of(context).unfocus();
           },
           obscureText: obscureText,
-          style: TextStyle(color: colorScheme.onSurface, fontFamily: GoogleFonts.manrope().fontFamily),
-          decoration: InputDecoration(
+          style: style ?? TextStyle(color: colorScheme.onSurface, fontFamily: GoogleFonts.manrope().fontFamily),
+          decoration: decoration ?? InputDecoration(
             hintText: hintText,
             hintStyle: TextStyle(
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),

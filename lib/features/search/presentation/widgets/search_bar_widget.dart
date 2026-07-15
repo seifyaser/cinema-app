@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:project/features/auth/presentation/widgets/custom_text_field.dart';
 
 class SearchBarWidget extends StatelessWidget {
   final TextEditingController controller;
@@ -22,20 +23,14 @@ class SearchBarWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white24),
           ),
-          child: TextField(
+          child: CustomTextField(
             controller: controller,
             onChanged: onChanged,
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'Manrope',
-            ),
+            style: const TextStyle(color: Colors.white, fontFamily: 'Manrope'),
             decoration: const InputDecoration(
               hintText: 'Search for movies...',
               hintStyle: TextStyle(color: Colors.white54),
-              prefixIcon: Icon(
-                Icons.search,
-                color: Color(0xFFEAB308),
-              ),
+              prefixIcon: Icon(Icons.search, color: Color(0xFFEAB308)),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(vertical: 16),
             ),
